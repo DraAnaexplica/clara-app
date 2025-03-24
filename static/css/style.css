@@ -1,11 +1,11 @@
-/* === CLARA - LAYOUT AJUSTADO PARA MOBILE (CORES ORIGINAIS) === */
+/* === CLARA - LAYOUT AJUSTADO PARA MOBILE (CORREÇÕES) === */
 
 body, html {
     margin: 0;
     padding: 0;
     height: 100%;
-    font-family: 'Arial', sans-serif; /* Mantenha a fonte original, se preferir */
-    background-color: #f7f7f7; /* Cor de fundo original */
+    font-family: 'Arial', sans-serif;
+    background-color: #f7f7f7;
 }
 
 main {
@@ -20,13 +20,24 @@ header {
     left: 0;
     right: 0;
     height: 60px;
-    background-color: white; /* Cor do header original */
+    background-color: white;
     z-index: 10;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     padding: 0 16px;
     border-bottom: 1px solid #ddd;
+}
+
+header img.avatar {
+    width: 40px; /* Reduz o tamanho do avatar */
+    height: 40px;
+    border-radius: 50%; /* Mantém o formato circular */
+    margin-right: 10px;
+}
+
+header h1 {
+    font-size: 1.2em;
+    margin: 0;
 }
 
 .chat-area {
@@ -48,13 +59,13 @@ header {
 }
 
 .user-message {
-    background-color: #dcf8c6; /* Cor da mensagem do usuário original */
+    background-color: #dcf8c6;
     align-self: flex-end;
     margin-left: auto;
 }
 
 .clara-message {
-    background-color: #f1f0f0; /* Cor da mensagem do contato original */
+    background-color: #f1f0f0;
     align-self: flex-start;
     margin-right: auto;
 }
@@ -65,7 +76,7 @@ header {
     left: 0;
     right: 0;
     height: 70px;
-    background-color: white; /* Cor do input original */
+    background-color: white;
     z-index: 10;
     display: flex;
     align-items: center;
@@ -83,24 +94,16 @@ header {
 
 .input-container button {
     padding: 8px 16px;
-    background-color: #007bff; /* Cor do botão original */
+    background-color: #007bff;
     color: white;
     border: none;
     border-radius: 20px;
     cursor: pointer;
 }
 
-/* Opcional: Estilo para o título do header */
-header h1 {
-    font-size: 1.2em;
-    margin: 0;
-}
-
-/* Opcional : Ajuste para imagens dentro das mensagens*/
 .message img{
     max-width: 100%;
     height: auto;
     border-radius: 8px;
 }
-
 
