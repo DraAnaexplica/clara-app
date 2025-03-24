@@ -1,86 +1,32 @@
-body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #fff6f6;
-}
-
-.chat-container {
-    display: flex;
-    flex-direction: column;
-    max-width: 600px;
-    margin: auto;
-    height: 100vh;
-}
-
-.chat-header {
-    display: flex;
-    align-items: center;
+/* Fixar o topo (header) */
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: white;
+    z-index: 10;
     padding: 10px;
-    background-color: #ec4899;
-    color: white;
+    border-bottom: 1px solid #ddd;
 }
 
-.chat-header .avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    margin-right: 10px;
-}
-
-.chat-header h1 {
-    font-size: 1.5rem;
-    margin: 0;
-}
-
-.chat-box {
-    flex: 1;
-    padding: 10px;
-    overflow-y: auto;
-    background-color: #ffffff;
-}
-
-.message {
-    max-width: 80%;
-    padding: 10px;
-    border-radius: 10px;
-    margin: 8px 0;
-    line-height: 1.4;
-    white-space: pre-wrap;
-}
-
-.user {
-    background-color: #d1fae5;
-    align-self: flex-end;
-}
-
-.clara {
-    background-color: #fce7f3;
-    align-self: flex-start;
-}
-
+/* Fixar o rodapé (input) */
 .input-container {
-    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: white;
+    z-index: 10;
     padding: 10px;
-    background-color: #fef2f2;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid #ddd;
 }
 
-.input-container input {
-    flex: 1;
-    padding: 12px;
-    border-radius: 10px;
-    border: 1px solid #e5e7eb;
-    font-size: 16px;
-}
-
-.input-container button {
-    margin-left: 10px;
-    padding: 12px 20px;
-    background-color: #ec4899;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 16px;
-    cursor: pointer;
+/* Área central do chat que deve rolar */
+.chat-area {
+    margin-top: 70px;        /* altura aproximada do header */
+    margin-bottom: 80px;     /* altura aproximada do footer */
+    overflow-y: auto;
+    max-height: calc(100vh - 150px);
+    padding: 10px;
 }
