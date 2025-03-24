@@ -1,6 +1,8 @@
 import openai
 import os
 from claraprompt import prompt_clara
+import os
+print("🔍 VERIFICANDO CHAVE:", os.getenv("OPENAI_API_KEY"))
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 openai.api_base = "https://openrouter.ai/api/v1"
