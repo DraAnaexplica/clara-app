@@ -1,50 +1,52 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const form = document.getElementById("mensagem-form");
-    const input = document.getElementById("mensagem");
-    const chatBox = document.getElementById("chat-box");
-
-    form.addEventListener("submit", async function (e) {
-        e.preventDefault();
-        const mensagem = input.value.trim();
-        if (!mensagem) return;
-
-        // Adiciona a mensagem do usuário
-        adicionarMensagem(mensagem, "user-message");
-
-        // Envia a mensagem ao backend
-        const response = await fetch("/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ mensagem: mensagem })
-        });
-
-        const data = await response.json();
-        // Adiciona a resposta da Clara
-        adicionarMensagem(data.resposta, "clara-message");
-
-        input.value = "";
-        chatBox.scrollTop = chatBox.scrollHeight;
-    });
-
-    function adicionarMensagem(texto, classe) {
-        const div = document.createElement("div");
-        div.classList.add("message", classe);
-
-        // Adiciona o texto da mensagem
-        const mensagemTexto = document.createElement("span");
-        mensagemTexto.textContent = texto;
-        div.appendChild(mensagemTexto);
-
-        // Adiciona o timestamp
-        const timestamp = document.createElement("span");
-        timestamp.classList.add("timestamp");
-        const agora = new Date();
-        timestamp.textContent = `${agora.getHours()}:${String(agora.getMinutes()).padStart(2, "0")}`;
-        div.appendChild(timestamp);
-
-        chatBox.appendChild(div);
+// Gera ou recupera o user_id do localStorage
+function getUserId() {
+    let userId = localStorage.getItem('user_id');
+    if (!userId) {
+        // Gera um UUID simples
+        userId = 'user-' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('user_id', userId);
     }
-});
+    return userId;
+}
 
+// Função pra enviar mensagem (ajustada)
+function sendMessage() {
+    const messageInput = document.getElementById("message-input");
+    const message = messageInput.value.trim();
+    if (message === "") return;
+
+    displayMessage({ from: "me", text: message });
+    messageInput.value = "";
+
+    const userId = getUserId(); // Pega o user_id
+
+    fetch("/clara", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mensagem: message, user_id: userId }) // Envia o user_id
+    })
+        .then(response => response.json())
+        .then(data => {
+            displayMessage({ from: "her", text: data.resposta });
+        })
+        .catch(error => {
+            console.error("Erro:", error);
+            displayMessage({ from: "her", text: "⚠️ A Clara teve um problema. Tenta de novo?" });
+        });
+}
+
+// Função pra exibir mensagens (já existente)
+function displayMessage(message) {
+    const chatBox = document.getElementById("chat-box");
+    const msgDiv = document.createElement("div");
+    msgDiv.className = message.from === "me" ? "message me" : "message her";
+    msgDiv.textContent = message.text;
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Chama sendMessage ao clicar no botão ou pressionar Enter (exemplo)
+document.getElementById("send-button").addEventListener("click", sendMessage);
+document.getElementById("message-input").addEventListener("keypress", function (e) {
+    if (e.key === "Enter") sendMessage();
+});
