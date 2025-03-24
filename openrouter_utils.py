@@ -2,7 +2,7 @@ import openai
 from claraprompt import prompt_clara
 
 # Configuração da API OpenRouter
-openai.api_key = "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"
+openai.api_key = os.getenv("OPENAI_API_KEY")
 openai.api_base = "https://openrouter.ai/api/v1"
 
 def gerar_resposta_clara(mensagem_usuario):
