@@ -11,9 +11,9 @@ function getUserId() {
 
 // Função pra enviar mensagem
 function sendMessage(event) {
-    event.preventDefault(); // Impede o recarregamento da página
+    event.preventDefault(); // Impede o comportamento padrão do formulário
 
-    const messageInput = document.getElementById("mensagem"); // ID corrigido
+    const messageInput = document.getElementById("mensagem");
     const message = messageInput.value.trim();
     if (message === "") return;
 
@@ -25,7 +25,7 @@ function sendMessage(event) {
     fetch("/clara", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mensagem: message, user_id: userId }) // Envia o user_id
+        body: JSON.stringify({ mensagem: message, user_id: userId })
     })
         .then(response => response.json())
         .then(data => {
@@ -47,5 +47,12 @@ function displayMessage(message) {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// Chama sendMessage ao enviar o formulário
-document.getElementById("mensagem-form").addEventListener("submit", sendMessage);
+// Garante que o DOM esteja carregado antes de adicionar o evento
+document.addEventListener("DOMContentLoaded", function() {
+    const form = document.getElementById("mensagem-form");
+    if (form) {
+        form.addEventListener("submit", sendMessage);
+    } else {
+        console.error("Formulário com ID 'mensagem-form' não encontrado!");
+    }
+});
