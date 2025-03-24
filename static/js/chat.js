@@ -8,8 +8,10 @@ document.addEventListener("DOMContentLoaded", function () {
         const mensagem = input.value.trim();
         if (!mensagem) return;
 
-        adicionarMensagem("Você", mensagem, "user");
+        // Adiciona a mensagem do usuário
+        adicionarMensagem(mensagem, "user-message");
 
+        // Envia a mensagem ao backend
         const response = await fetch("/", {
             method: "POST",
             headers: {
@@ -19,16 +21,29 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         const data = await response.json();
-        adicionarMensagem("Clara", data.resposta, "clara");
+        // Adiciona a resposta da Clara
+        adicionarMensagem(data.resposta, "clara-message");
 
         input.value = "";
         chatBox.scrollTop = chatBox.scrollHeight;
     });
 
-    function adicionarMensagem(remetente, texto, classe) {
+    function adicionarMensagem(texto, classe) {
         const div = document.createElement("div");
         div.classList.add("message", classe);
-        div.innerHTML = `<strong>${remetente}:</strong> ${texto}`;
+
+        // Adiciona o texto da mensagem
+        const mensagemTexto = document.createElement("span");
+        mensagemTexto.textContent = texto;
+        div.appendChild(mensagemTexto);
+
+        // Adiciona o timestamp
+        const timestamp = document.createElement("span");
+        timestamp.classList.add("timestamp");
+        const agora = new Date();
+        timestamp.textContent = `${agora.getHours()}:${String(agora.getMinutes()).padStart(2, "0")}`;
+        div.appendChild(timestamp);
+
         chatBox.appendChild(div);
     }
 });
