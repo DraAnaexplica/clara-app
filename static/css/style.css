@@ -1,32 +1,81 @@
-/* Fixar o topo (header) */
+/* === CLARA - LAYOUT AJUSTADO PARA MOBILE === */
+
+/* Topo fixo (header) */
 header {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
+    height: 60px;
     background-color: white;
     z-index: 10;
-    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
     border-bottom: 1px solid #ddd;
 }
 
-/* Fixar o rodapé (input) */
+/* Campo de digitação fixo (input) */
 .input-container {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
+    height: 70px;
     background-color: white;
     z-index: 10;
-    padding: 10px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
     border-top: 1px solid #ddd;
 }
 
-/* Área central do chat que deve rolar */
+/* Área central do chat (rolável entre topo e rodapé) */
 .chat-area {
-    margin-top: 70px;        /* altura aproximada do header */
-    margin-bottom: 80px;     /* altura aproximada do footer */
+    position: absolute;
+    top: 60px;          /* altura real do header */
+    bottom: 70px;       /* altura real do rodapé */
+    left: 0;
+    right: 0;
     overflow-y: auto;
-    max-height: calc(100vh - 150px);
-    padding: 10px;
+    padding: 12px;
 }
+
+/* Estilo das mensagens (básico) */
+.message {
+    margin-bottom: 10px;
+    padding: 12px;
+    border-radius: 12px;
+    max-width: 80%;
+    word-wrap: break-word;
+}
+
+.user-message {
+    background-color: #dcf8c6;
+    align-self: flex-end;
+    margin-left: auto;
+}
+
+.clara-message {
+    background-color: #f1f0f0;
+    align-self: flex-start;
+    margin-right: auto;
+}
+
+/* Ajuste no body */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Arial', sans-serif;
+    background-color: #f7f7f7;
+}
+
+/* Garante que tudo fique dentro da viewport no mobile */
+main {
+    position: relative;
+    height: 100vh;
+    overflow: hidden;
+}
+
