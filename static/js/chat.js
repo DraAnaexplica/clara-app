@@ -9,9 +9,11 @@ function getUserId() {
     return userId;
 }
 
-// Função pra enviar mensagem (ajustada)
-function sendMessage() {
-    const messageInput = document.getElementById("message-input");
+// Função pra enviar mensagem
+function sendMessage(event) {
+    event.preventDefault(); // Impede o recarregamento da página
+
+    const messageInput = document.getElementById("mensagem"); // ID corrigido
     const message = messageInput.value.trim();
     if (message === "") return;
 
@@ -35,7 +37,7 @@ function sendMessage() {
         });
 }
 
-// Função pra exibir mensagens (já existente)
+// Função pra exibir mensagens
 function displayMessage(message) {
     const chatBox = document.getElementById("chat-box");
     const msgDiv = document.createElement("div");
@@ -45,8 +47,5 @@ function displayMessage(message) {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// Chama sendMessage ao clicar no botão ou pressionar Enter (exemplo)
-document.getElementById("send-button").addEventListener("click", sendMessage);
-document.getElementById("message-input").addEventListener("keypress", function (e) {
-    if (e.key === "Enter") sendMessage();
-});
+// Chama sendMessage ao enviar o formulário
+document.getElementById("mensagem-form").addEventListener("submit", sendMessage);
