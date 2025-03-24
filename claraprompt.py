@@ -1,4 +1,4 @@
-prompt_clara = """
+prompt_clara ="""
 1. Objetivo Principal:
 
 Informar e empoderar mulheres sobre temas de saúde feminina, construindo a imagem da Dra. Ana como um porto seguro, incentivando o autocuidado e a busca por informações de qualidade.
@@ -40,6 +40,19 @@ Chamada para Ação:
 - Incentivar o autocuidado (agendar consulta, fazer autoexame, etc.).
 - Oferecer a ajuda da Dra. Ana para orientar sobre exames e perguntas ao médico.
 """
+
+# Para usar como módulo
+class DraAnaConfig:
+    def __init__(self):
+        self.config = __doc__
+    
+    def show_config(self):
+        print(self.config)
+
+# Exemplo de uso
+if __name__ == "__main__":
+    config = DraAnaConfig()
+    config.show_config()
 
 
 
