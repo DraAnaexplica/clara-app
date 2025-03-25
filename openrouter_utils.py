@@ -1,78 +1,93 @@
-# openrouter_utils.py (versão atualizada)
-
+import os
 import requests
-import json
 import sqlite3
-import datetime
+from claraprompt import prompt_clara
+from datetime import datetime
+import pytz  # Biblioteca pra lidar com fuso horário
 
-# Sua chave de API do OpenRouter
-API_KEY = "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"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-# URL da API OpenRouter
-OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
-
-# Nome do banco de dados
-DB_NAME = "chat_history.db"
-
-# Função para gerar a resposta da Clara
-def gerar_resposta_clara(prompt):
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
-
-    payload = {
-        "model": "openrouter/google/gemini-pro",
-        "messages": [
-            {"role": "user", "content": prompt}
-        ],
-        "stream": False
-    }
-
-    try:
-        response = requests.post(OPENROUTER_API_URL, headers=headers, json=payload)
-        print("Resposta da API:", response.status_code, response.text)
-
-        if response.status_code == 200:
-            data = response.json()
-            return data["choices"][0]["message"]["content"]
-        else:
-            return "❌ Clara teve dificuldade em responder agora. Tenta de novo?"
-
-    except Exception as e:
-        print("Erro ao enviar requisição para o OpenRouter:", str(e))
-        return "❌ Clara teve dificuldade técnica. Me avisa o que aconteceu?"
-
-# Função para salvar mensagem no banco de dados
-def save_message(user_id, remetente, mensagem):
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-
-    cursor.execute('''CREATE TABLE IF NOT EXISTS mensagens (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id TEXT NOT NULL,
-        remetente TEXT NOT NULL,
-        mensagem TEXT NOT NULL,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    )''')
-
-    cursor.execute("INSERT INTO mensagens (user_id, remetente, mensagem) VALUES (?, ?, ?)",
-                   (user_id, remetente, mensagem))
+# Inicializa o banco de dados SQLite
+def init_db():
+    conn = sqlite3.connect("chat_history.db")
+    c = conn.cursor()
+    c.execute("""CREATE TABLE IF NOT EXISTS messages (
+        user_id TEXT,
+        sender TEXT,
+        message TEXT,
+        timestamp TEXT
+    )""")
     conn.commit()
     conn.close()
 
-# Função para buscar mensagens novas
-def get_new_messages(user_id, last_timestamp=None):
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-
-    if last_timestamp:
-        cursor.execute("SELECT mensagem FROM mensagens WHERE user_id = ? AND remetente = 'Clara' AND timestamp > ?", (user_id, last_timestamp))
-    else:
-        cursor.execute("SELECT mensagem FROM mensagens WHERE user_id = ? AND remetente = 'Clara'", (user_id,))
-
-    mensagens = [row[0] for row in cursor.fetchall()]
+# Salva uma mensagem no banco de dados
+def save_message(user_id, sender, message):
+    conn = sqlite3.connect("chat_history.db")
+    c = conn.cursor()
+    timestamp = datetime.now(pytz.timezone("America/Sao_Paulo")).strftime("%Y-%m-%d %H:%M:%S")
+    c.execute("INSERT INTO messages (user_id, sender, message, timestamp) VALUES (?, ?, ?, ?)",
+              (user_id, sender, message, timestamp))
+    conn.commit()
     conn.close()
-    return mensagens
 
+# Recupera o histórico de mensagens do usuário (limite de 5 mensagens mais recentes)
+def get_history(user_id):
+    conn = sqlite3.connect("chat_history.db")
+    c = conn.cursor()
+    c.execute("SELECT sender, message FROM messages WHERE user_id = ? ORDER BY timestamp DESC LIMIT 5", (user_id,))
+    history = c.fetchall()
+    conn.close()
+    return history
+
+def gerar_resposta_clara(mensagem_usuario, user_id=""):
+    if not GEMINI_API_KEY:
+        print("Erro: GEMINI_API_KEY não configurada!")
+        return "⚠️ A Clara teve dificuldade em responder agora. Tenta de novo?"
+
+    # Inicializa o banco de dados (se ainda não foi inicializado)
+    init_db()
+
+    # Salva a mensagem do usuário no banco de dados
+    if user_id:
+        save_message(user_id, "user", mensagem_usuario)
+
+    # Obtém o horário atual no fuso GMT-3
+    fuso_horario = pytz.timezone("America/Sao_Paulo")  # GMT-3
+    horario_atual = datetime.now(fuso_horario).strftime("%H:%M")
+
+    # Recupera o histórico de mensagens
+    history = get_history(user_id) if user_id else []
+    history_text = "\n".join([f"{sender}: {msg}" for sender, msg in reversed(history)])
+
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+    headers = {
+        "Content-Type": "application/json"
+    }
+    data = {
+        "contents": [{
+            "parts": [{
+                "text": f"{prompt_clara}\nHistórico da conversa:\n{history_text}\nHorário atual: {horario_atual} (GMT-3)\nUsuário: {mensagem_usuario}"
+            }]
+        }]
+    }
+
+    try:
+        print("Enviando requisição pro Gemini API...")
+        response = requests.post(f"{url}?key={GEMINI_API_KEY}", headers=headers, json=data, timeout=5)
+        print("Resposta do Gemini API:", response.status_code, response.text)
+        resposta = response.json()
+
+        reply = resposta["candidates"][0]["content"]["parts"][0]["text"]
+
+        # Salva a resposta da Clara no banco de dados
+        if user_id:
+            save_message(user_id, "Clara", reply)
+
+        return reply
+    except requests.Timeout:
+        print("Erro: Timeout na requisição pro Gemini API")
+        return "⚠️ A Clara tá demorando pra responder. Tenta de novo?"
+    except Exception as e:
+        print("Erro ao processar resposta do Gemini:", str(e), resposta if 'resposta' in locals() else "Sem resposta")
+        return "⚠️ A Clara teve dificuldade em responder agora. Tenta de novo?"
 
