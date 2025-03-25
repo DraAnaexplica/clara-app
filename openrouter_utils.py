@@ -59,7 +59,8 @@ def gerar_resposta_clara(mensagem_usuario, user_id=""):
     history = get_history(user_id) if user_id else []
     history_text = "\n".join([f"{sender}: {msg}" for sender, msg in reversed(history)])
 
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+    url = url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-latest:generateContent"
+
     headers = {
         "Content-Type": "application/json"
     }

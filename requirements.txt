@@ -1,8 +1,4 @@
 flask
-requests
 gunicorn
-apscheduler
+requests
 pytz
-
-
-
