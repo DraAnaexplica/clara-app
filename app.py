@@ -97,9 +97,8 @@ def send_proactive_message():
 # Função para rodar o agendador em uma thread separada
 def run_scheduler():
     # Agendar mensagens proativas em horários específicos (em GMT-3)
-    schedule.every().day.at("09:00").do(send_proactive_message)  # Mensagem matinal
-    schedule.every().day.at("14:00").do(send_proactive_message)  # Mensagem à tarde
-    schedule.every().day.at("20:00").do(send_proactive_message)  # Mensagem noturna
+    schedule.every().day.at("11:00").do(send_proactive_message)  # Mensagem às 11:00
+    schedule.every().day.at("11:30").do(send_proactive_message)  # Mensagem às 11:30
 
     while True:
         schedule.run_pending()
