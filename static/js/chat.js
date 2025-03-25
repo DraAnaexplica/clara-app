@@ -1,3 +1,14 @@
+// Gera ou recupera o user_id do localStorage
+function getUserId() {
+    let userId = localStorage.getItem('user_id');
+    if (!userId) {
+        // Gera um UUID simples
+        userId = 'user-' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('user_id', userId);
+    }
+    return userId;
+}
+
 // Função pra enviar mensagem
 function sendMessage(event) {
     event.preventDefault(); // Impede o comportamento padrão do formulário
@@ -9,10 +20,12 @@ function sendMessage(event) {
     displayMessage({ from: "me", text: message });
     messageInput.value = "";
 
-    fetch("/", {  // Muda de "/clara" pra "/"
+    const userId = getUserId(); // Pega o user_id
+
+    fetch("/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mensagem: message }) // Sem user_id
+        body: JSON.stringify({ mensagem: message, user_id: userId }) // Inclui o user_id
     })
         .then(response => response.json())
         .then(data => {

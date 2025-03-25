@@ -6,7 +6,7 @@ import pytz  # Biblioteca pra lidar com fuso horário
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-def gerar_resposta_clara(mensagem_usuario):
+def gerar_resposta_clara(mensagem_usuario, user_id=""):  # Adiciona user_id como parâmetro opcional
     if not GEMINI_API_KEY:
         print("Erro: GEMINI_API_KEY não configurada!")
         return "⚠️ A Clara teve dificuldade em responder agora. Tenta de novo?"
@@ -41,5 +41,4 @@ def gerar_resposta_clara(mensagem_usuario):
     except Exception as e:
         print("Erro ao processar resposta do Gemini:", str(e), resposta if 'resposta' in locals() else "Sem resposta")
         return "⚠️ A Clara teve dificuldade em responder agora. Tenta de novo?"
-
 
