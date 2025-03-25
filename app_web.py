@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template
-from openrouter_utils import gerar_resposta_clara, save_message, get_new_messages
+from openrouter_utils import gerar_resposta_clara, save_message
+
 from claraprompt import prompt_inicial
 
 app = Flask(__name__)
