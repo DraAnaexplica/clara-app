@@ -2,16 +2,25 @@
 function getUserId() {
     let userId = localStorage.getItem('user_id');
     if (!userId) {
-        // Gera um UUID simples
         userId = 'user-' + Math.random().toString(36).substr(2, 9);
         localStorage.setItem('user_id', userId);
     }
     return userId;
 }
 
-// Função pra enviar mensagem
+// Exibe a mensagem no chat
+function displayMessage({ from, text }) {
+    const chatBox = document.getElementById("chat-box");
+    const messageDiv = document.createElement("div");
+    messageDiv.classList.add("mensagem", from === "me" ? "minha" : "dela");
+    messageDiv.innerHTML = `<p>${text}</p>`;
+    chatBox.appendChild(messageDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Envia mensagem manualmente
 function sendMessage(event) {
-    event.preventDefault(); // Impede o comportamento padrão do formulário
+    event.preventDefault();
 
     const messageInput = document.getElementById("mensagem");
     const message = messageInput.value.trim();
@@ -20,39 +29,40 @@ function sendMessage(event) {
     displayMessage({ from: "me", text: message });
     messageInput.value = "";
 
-    const userId = getUserId(); // Pega o user_id
+    const userId = getUserId();
 
     fetch("/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mensagem: message, user_id: userId }) // Inclui o user_id
+        body: JSON.stringify({ mensagem: message, user_id: userId })
     })
         .then(response => response.json())
         .then(data => {
-            displayMessage({ from: "her", text: data.resposta });
+            displayMessage({ from: "clara", text: data.resposta });
         })
         .catch(error => {
-            console.error("Erro:", error);
-            displayMessage({ from: "her", text: "⚠️ A Clara teve um problema. Tenta de novo?" });
+            console.error("Erro ao enviar mensagem:", error);
         });
 }
 
-// Função pra exibir mensagens
-function displayMessage(message) {
-    const chatBox = document.getElementById("chat-box");
-    const msgDiv = document.createElement("div");
-    msgDiv.className = message.from === "me" ? "message me" : "message her";
-    msgDiv.textContent = message.text;
-    chatBox.appendChild(msgDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
+// Escuta o envio do formulário
+document.getElementById("mensagem-form").addEventListener("submit", sendMessage);
+
+// === Verificação automática de novas mensagens da Clara ===
+function verificarMensagensNovas() {
+    const userId = getUserId();
+
+    fetch(`/mensagens_novas?user_id=${userId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.novas && data.novas.length > 0) {
+                data.novas.forEach(msg => {
+                    displayMessage({ from: "clara", text: msg });
+                });
+            }
+        })
+        .catch(err => console.error("Erro ao buscar mensagens novas:", err));
 }
 
-// Garante que o DOM esteja carregado antes de adicionar o evento
-document.addEventListener("DOMContentLoaded", function() {
-    const form = document.getElementById("mensagem-form");
-    if (form) {
-        form.addEventListener("submit", sendMessage);
-    } else {
-        console.error("Formulário com ID 'mensagem-form' não encontrado!");
-    }
-});
+// Verifica novas mensagens a cada 15 segundos
+setInterval(verificarMensagensNovas, 15000);

@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from openrouter_utils import gerar_resposta_clara
+import agendador  # Ativa mensagens automáticas da Clara
 
 app = Flask(__name__)
 
@@ -21,3 +22,4 @@ def index():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
