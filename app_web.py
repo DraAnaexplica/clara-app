@@ -1,44 +1,43 @@
-from flask import Flask, render_template, request, jsonify
-from openrouter_utils import gerar_resposta_clara
-import agendador  # Ativa mensagens automáticas da Clara
+from flask import Flask, request, jsonify, render_template
+from openrouter_utils import gerar_resposta_clara, save_message, get_new_messages
+from claraprompt import prompt_inicial
 
 app = Flask(__name__)
+
+# Inicializa o agendador automaticamente no deploy
+def iniciar_agendador():
+    try:
+        import agendador  # Importa e ativa o agendador ao iniciar o app
+    except Exception as e:
+        print(f"[ERRO ao iniciar agendador] {e}")
+
+iniciar_agendador()
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        data = request.get_json()
-        mensagem = data.get("mensagem", "")
-        user_id = data.get("user_id", "")  # Recebe o user_id
+        user_input = request.form["mensagem"]
+        user_id = request.remote_addr or "usuario-desconhecido"
 
-        if not mensagem:
-            return jsonify({"resposta": "⚠️ Nenhuma mensagem recebida."})
+        if user_input.strip().lower() == "oi":
+            mensagem = f"{prompt_inicial}\nUsuário: {user_input}"
+        else:
+            mensagem = user_input
 
-        resposta = gerar_resposta_clara(mensagem, user_id=user_id)
+        resposta = gerar_resposta_clara(mensagem)
+        save_message(user_id, "Usuário", user_input)
+        save_message(user_id, "Clara", resposta)
         return jsonify({"resposta": resposta})
 
     return render_template("index.html")
 
 
-# ✅ NOVA ROTA para buscar mensagens automáticas no chat.js
-@app.route("/mensagens_novas")
+@app.route("/mensagens_novas", methods=["GET"])
 def mensagens_novas():
-    user_id = request.args.get("user_id", "")
-    if not user_id:
-        return jsonify({"erro": "user_id não fornecido."}), 400
-
-    try:
-        import sqlite3
-        conn = sqlite3.connect("chat_history.db")
-        c = conn.cursor()
-        c.execute("SELECT message FROM messages WHERE user_id=? AND sender='Clara' ORDER BY timestamp DESC LIMIT 3", (user_id,))
-        novas = [row[0] for row in c.fetchall()]
-        conn.close()
-        return jsonify({"novas": novas})
-    except Exception as e:
-        return jsonify({"erro": f"Erro ao buscar mensagens: {str(e)}"}), 500
+    user_id = request.args.get("user_id", "usuario-desconhecido")
+    mensagens = get_new_messages(user_id)
+    return jsonify({"novas": mensagens})
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
-
+    app.run(debug=True)
