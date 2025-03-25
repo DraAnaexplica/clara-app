@@ -1,35 +1,40 @@
-from flask import Flask, request, render_template, jsonify
-from openrouter_utils import gerar_resposta_clara, save_message, get_new_messages
-from agendador import scheduler
-from claraprompt import prompt_inicial
+from flask import Flask, render_template, request, jsonify
+from openrouter_utils import gerar_resposta_clara
+import agendador  # Ativa mensagens automáticas da Clara
 
+@app.route("/mensagens_novas")
+def mensagens_novas():
+    user_id = request.args.get("user_id", "")
+    if not user_id:
+        return jsonify({"erro": "user_id não fornecido."}), 400
+
+    try:
+        import sqlite3
+        conn = sqlite3.connect("chat_history.db")
+        c = conn.cursor()
+        c.execute("SELECT message FROM messages WHERE user_id=? AND sender='Clara' ORDER BY timestamp DESC LIMIT 3", (user_id,))
+        novas = [row[0] for row in c.fetchall()]
+        conn.close()
+        return jsonify({"novas": novas})
+    except Exception as e:
+        return jsonify({"erro": f"Erro ao buscar mensagens: {str(e)}"}), 500
 app = Flask(__name__)
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        user_message = request.form["message"]
-        user_id = request.form["user_id"]
+        data = request.get_json()
+        mensagem = data.get("mensagem", "")
+        user_id = data.get("user_id", "")  # Recebe o user_id
 
-        # Gera resposta da Clara
-        historico = []  # Ainda sem histórico real
-        mensagem = f"{prompt_inicial}\n\nHistórico: {historico}\n\nUsuário: {user_message}"
-        resposta = gerar_resposta_clara(mensagem)
+        if not mensagem:
+            return jsonify({"resposta": "⚠️ Nenhuma mensagem recebida."})
 
-        # Salva no banco
-        save_message(user_id, "Usuário", user_message)
-        save_message(user_id, "Clara", resposta)
+        # Passa o user_id pro gerar_resposta_clara (ainda não será usado)
+        resposta = gerar_resposta_clara(mensagem, user_id=user_id)
+        return jsonify({"resposta": resposta})
 
-        return render_template("index.html", resposta=resposta, user_id=user_id)
-
-    return render_template("index.html", resposta=None, user_id="testuser")
-
-@app.route("/mensagens_novas")
-def mensagens_novas():
-    user_id = request.args.get("user_id")
-    mensagens = get_new_messages(user_id)
-    return jsonify({"novas": mensagens})
+    return render_template("index.html")
 
 if __name__ == "__main__":
-    app.run(debug=True)
-
+    app.run(host="0.0.0.0", port=5000, debug=True)
