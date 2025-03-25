@@ -1,8 +1,6 @@
-
 from apscheduler.schedulers.background import BackgroundScheduler
 from openrouter_utils import gerar_resposta_clara
 from openrouter_utils import save_message
-from claraprompt import prompt_proactive
 import atexit
 import datetime
 
@@ -15,8 +13,7 @@ USER_ID = "user-automatico"
 # Função que será chamada automaticamente
 def enviar_mensagem_automatica():
     horario_atual = datetime.datetime.now().strftime("%H:%M")
-    mensagem_inicial = f"Envie uma mensagem proativa considerando o horário atual: {horario_atual}."
-    mensagem = f"{prompt_proactive}\n\nHorário atual: {horario_atual}\n\nHistórico da conversa: []\n\n{mensagem_inicial}"
+    mensagem = f"Oi Clara! São {horario_atual}. Manda uma mensagem carinhosa e espontânea como se fosse sua, sem parecer IA."
 
     resposta = gerar_resposta_clara(mensagem)
     save_message(USER_ID, "Clara", resposta)
