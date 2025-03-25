@@ -7,13 +7,16 @@ app = Flask(__name__)
 def conversar_com_clara():
     data = request.get_json()
     mensagem = data.get('mensagem')
-    user_id = data.get('user_id', 'default_user')  # Identificador do usuário
 
     if not mensagem:
         return jsonify({'erro': 'Mensagem não fornecida'}), 400
 
-    resposta = gerar_resposta_clara(mensagem, user_id)
+    resposta = gerar_resposta_clara(mensagem)
     return jsonify({'resposta': resposta})
+
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
