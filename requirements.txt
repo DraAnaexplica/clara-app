@@ -1,4 +1,7 @@
 flask
 requests
 gunicorn
-apscheduler  ✅ (adicione aqui)
+apscheduler
+
+
+
