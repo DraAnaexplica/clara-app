@@ -1,22 +1,45 @@
-from flask import Flask, request, jsonify
-from openrouter_utils import gerar_resposta_clara
+// Função pra enviar mensagem
+function sendMessage(event) {
+    event.preventDefault(); // Impede o comportamento padrão do formulário
 
-app = Flask(__name__)
+    const messageInput = document.getElementById("mensagem");
+    const message = messageInput.value.trim();
+    if (message === "") return;
 
-@app.route('/clara', methods=['POST'])
-def conversar_com_clara():
-    data = request.get_json()
-    mensagem = data.get('mensagem')
+    displayMessage({ from: "me", text: message });
+    messageInput.value = "";
 
-    if not mensagem:
-        return jsonify({'erro': 'Mensagem não fornecida'}), 400
+    fetch("/", {  // Muda de "/clara" pra "/"
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mensagem: message }) // Sem user_id
+    })
+        .then(response => response.json())
+        .then(data => {
+            displayMessage({ from: "her", text: data.resposta });
+        })
+        .catch(error => {
+            console.error("Erro:", error);
+            displayMessage({ from: "her", text: "⚠️ A Clara teve um problema. Tenta de novo?" });
+        });
+}
 
-    resposta = gerar_resposta_clara(mensagem)
-    return jsonify({'resposta': resposta})
+// Função pra exibir mensagens
+function displayMessage(message) {
+    const chatBox = document.getElementById("chat-box");
+    const msgDiv = document.createElement("div");
+    msgDiv.className = message.from === "me" ? "message me" : "message her";
+    msgDiv.textContent = message.text;
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
 
-@app.route('/')
-def index():
-    return app.send_static_file('index.html')
-
-if __name__ == '__main__':
-    app.run(debug=True)
+// Garante que o DOM esteja carregado antes de adicionar o evento
+document.addEventListener("DOMContentLoaded", function() {
+    const form = document.getElementById("mensagem-form");
+    if (form) {
+        form.addEventListener("submit", sendMessage);
+    } else {
+        console.error("Formulário com ID 'mensagem-form' não encontrado!");
+    }
+});
