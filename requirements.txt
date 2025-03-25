@@ -2,6 +2,7 @@ flask
 requests
 gunicorn
 apscheduler
+pytz
 
 
 
