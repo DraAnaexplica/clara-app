@@ -16,13 +16,22 @@ iniciar_agendador()
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        user_input = request.form["mensagem"]
-        user_id = request.remote_addr or "usuario-desconhecido"
+        # Aceita tanto JSON quanto formulário
+        if request.is_json:
+            data = request.get_json()
+            user_input = data.get("mensagem")
+            user_id = data.get("user_id", request.remote_addr or "usuario-desconhecido")
+        else:
+            user_input = request.form.get("mensagem")
+            user_id = request.remote_addr or "usuario-desconhecido"
 
-        # Removemos a dependência de prompt_inicial
-        mensagem = f"Usuário: {user_input}"  # Passa diretamente a mensagem do usuário
+        if not user_input:
+            return jsonify({"erro": "Mensagem não fornecida"}), 400
 
-        resposta = gerar_resposta_clara(mensagem, user_id=user_id)  # Passa o user_id para manter o histórico
+        # Remove a dependência de prompt_inicial
+        mensagem = f"Usuário: {user_input}"
+
+        resposta = gerar_resposta_clara(mensagem, user_id=user_id)
         save_message(user_id, "Usuário", user_input)
         save_message(user_id, "Clara", resposta)
         return jsonify({"resposta": resposta})
