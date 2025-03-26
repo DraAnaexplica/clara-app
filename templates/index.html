@@ -17,7 +17,7 @@
             {% for sender, message in messages %}
                 <div class="message {{ 'user-message' if sender == 'Você' else 'clara-message' }}">
                     {{ message }}
-                    <span class="timestamp">{{ message.split()[-1] }}</span> <!-- Ajuste conforme o formato do timestamp -->
+                    <span class="timestamp">{{ message.split()[-1] }}</span>
                 </div>
             {% endfor %}
         </div>

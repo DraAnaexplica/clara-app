@@ -1,4 +1,3 @@
-// Gera ou recupera o user_id do localStorage
 function getUserId() {
     let userId = localStorage.getItem('user_id');
     if (!userId) {
@@ -8,14 +7,12 @@ function getUserId() {
     return userId;
 }
 
-// Função para formatar o timestamp
 function getTimestamp() {
     const now = new Date();
     return now.getHours().toString().padStart(2, '0') + ':' + 
            now.getMinutes().toString().padStart(2, '0');
 }
 
-// Função para enviar mensagem
 function sendMessage(event) {
     event.preventDefault();
 
@@ -28,7 +25,7 @@ function sendMessage(event) {
 
     const userId = getUserId();
 
-    fetch("/send_message", {  // Alterado de "/" para "/send_message"
+    fetch("/send_message", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mensagem: message, user_id: userId })
@@ -50,7 +47,6 @@ function sendMessage(event) {
     });
 }
 
-// Função para exibir mensagens
 function displayMessage(message) {
     const chatBox = document.getElementById("chat-box");
     const msgDiv = document.createElement("div");
