@@ -1,88 +1,100 @@
 import os
-import sqlite3
 import requests
+import sqlite3
+from claraprompt import prompt_clara
 from datetime import datetime
 import pytz
-from claraprompt import prompt_clara
 
-# Configuração do OpenRouter
-MODEL = "gryphe/mythonax-12-13b"  # Modelo gratuito
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")  # Chave no Render
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
+# Inicializa o banco de dados SQLite
 def init_db():
-    conn = sqlite3.connect('chat_history.db')
+    conn = sqlite3.connect("chat_history.db")
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS messages
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  sender TEXT,
-                  message TEXT,
-                  timestamp TEXT)''')
+    c.execute("""CREATE TABLE IF NOT EXISTS messages (
+        user_id TEXT,
+        sender TEXT,
+        message TEXT,
+        timestamp TEXT
+    )""")
     conn.commit()
     conn.close()
 
-def save_message(sender, message):
-    conn = sqlite3.connect('chat_history.db')
+# Salva uma mensagem no banco de dados
+def save_message(user_id, sender, message):
+    conn = sqlite3.connect("chat_history.db")
     c = conn.cursor()
-    timestamp = datetime.now(pytz.timezone('America/Sao_Paulo')).strftime('%Y-%m-%d %H:%M:%S')
-    c.execute("INSERT INTO messages (sender, message, timestamp) VALUES (?, ?, ?)",
-              (sender, message, timestamp))
+    timestamp = datetime.now(pytz.timezone("America/Sao_Paulo")).strftime("%Y-%m-%d %H:%M:%S")
+    c.execute("INSERT INTO messages (user_id, sender, message, timestamp) VALUES (?, ?, ?, ?)",
+              (user_id, sender, message, timestamp))
     conn.commit()
     conn.close()
 
-def get_history(limit=5):
-    conn = sqlite3.connect('chat_history.db')
+# Recupera o histórico de mensagens do usuário (limite de 5 mensagens mais recentes)
+def get_history(user_id):
+    conn = sqlite3.connect("chat_history.db")
     c = conn.cursor()
-    c.execute("SELECT sender, message FROM messages ORDER BY id DESC LIMIT ?", (limit,))
+    c.execute("SELECT sender, message FROM messages WHERE user_id = ? ORDER BY timestamp DESC LIMIT 5", (user_id,))
     history = c.fetchall()
     conn.close()
     return history
 
 def gerar_resposta_clara(mensagem_usuario, user_id=""):
     if not OPENROUTER_API_KEY:
-        return "⚠️ Erro: Chave OpenRouter não configurada no Render."
+        print("Erro: OPENROUTER_API_KEY não configurada!")
+        return "⚠️ A Clara teve dificuldade em responder agora. Tenta de novo?"
 
+    # Inicializa o banco de dados (se ainda não foi inicializado)
     init_db()
-    save_message("Usuário", mensagem_usuario)
 
-    # Formatação do prompt para MythoMax (Llama 2)
-    history = get_history()
-    history_text = "\n".join([f"{sender}: {msg}" for sender, msg in history])
-    current_time = datetime.now(pytz.timezone('America/Sao_Paulo')).strftime('%H:%M')
+    # Salva a mensagem do usuário no banco de dados
+    if user_id:
+        save_message(user_id, "user", mensagem_usuario)
 
-    full_prompt = f"""
-    [INST] <<SYS>>
-    {prompt_clara}
-    <</SYS>>
+    # Obtém o horário atual no fuso GMT-3
+    fuso_horario = pytz.timezone("America/Sao_Paulo")  # GMT-3
+    horario_atual = datetime.now(fuso_horario).strftime("%H:%M")
 
-    Histórico:
-    {history_text}
+    # Recupera o histórico de mensagens
+    history = get_history(user_id) if user_id else []
+    history_text = "\n".join([f"{sender}: {msg}" for sender, msg in reversed(history)])
 
-    Horário: {current_time} (GMT-3)
-    Usuário: {mensagem_usuario}
-    [/INST]
-    """
+    # Monta o prompt no formato de mensagens para o OpenRouter
+    messages = [
+        {"role": "system", "content": f"{prompt_clara}\nHorário atual: {horario_atual} (GMT-3)"},
+        {"role": "user", "content": f"Histórico da conversa:\n{history_text}\nUsuário: {mensagem_usuario}"}
+    ]
+
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "model": "gryphe/mythomax-l2-13b:free",
+        "messages": messages,
+        "temperature": 0.7,  # Ajuste conforme necessário
+        "max_tokens": 500    # Ajuste conforme necessário
+    }
 
     try:
-        response = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": MODEL,
-                "messages": [{"role": "user", "content": full_prompt}],
-                "temperature": 0.7,
-                "max_tokens": 800
-            },
-            timeout=15
-        )
+        print("Enviando requisição pro OpenRouter API...")
+        response = requests.post(url, headers=headers, json=data, timeout=5)
+        print("Resposta do OpenRouter API:", response.status_code, response.text)
         resposta = response.json()
-        clara_response = resposta["choices"][0]["message"]["content"]
-        save_message("Clara", clara_response)
-        return clara_response
 
+        # Extrai a resposta do modelo
+        reply = resposta["choices"][0]["message"]["content"]
+
+        # Salva a resposta da Clara no banco de dados
+        if user_id:
+            save_message(user_id, "Clara", reply)
+
+        return reply
+    except requests.Timeout:
+        print("Erro: Timeout na requisição pro OpenRouter API")
+        return "⚠️ A Clara tá demorando pra responder. Tenta de novo?"
     except Exception as e:
-        print(f"Erro no OpenRouter: {str(e)}")
-        return "⚠️ Clara está ocupada. Tente novamente mais tarde!"
+        print("Erro ao processar resposta do OpenRouter:", str(e), resposta if 'resposta' in locals() else "Sem resposta")
+        return "⚠️ A Clara teve dificuldade em responder agora. Tenta de novo?"
 
