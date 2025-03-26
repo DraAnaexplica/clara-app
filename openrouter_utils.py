@@ -84,9 +84,10 @@ def gerar_resposta_clara(mensagem_usuario, user_id=""):
 
     # Modelo: Nous Hermes 2 Pro (base Mistral refinado)
     data = {
-        "model": "nous/hermes-2-pro-mistral",  # você pode trocar aqui por outro se quiser testar
-        "messages": mensagens_formatadas
-    }
+    "model": "nousresearch/nous-hermes-2-mistral",
+    "messages": mensagens_formatadas
+}
+
 
     try:
         print("Enviando requisição pro OpenRouter...")
