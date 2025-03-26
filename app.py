@@ -84,16 +84,24 @@ scheduler_thread.start()
 
 @app.route('/')
 def index():
+    print("Acessando a rota /")  # Log para depuração
     conn = sqlite3.connect('chat_history.db')
     c = conn.cursor()
     c.execute("SELECT sender, message FROM messages ORDER BY id")
     messages = c.fetchall()
     conn.close()
-    return render_template('index.html', messages=messages)
+    print(f"Mensagens carregadas: {messages}")  # Log para depuração
+    try:
+        return render_template('index.html', messages=messages)
+    except Exception as e:
+        print(f"Erro ao renderizar index.html: {e}")
+        return "Erro ao carregar a página", 500
 
 @app.route('/send_message', methods=['POST'])
 def send_message():
+    print("Acessando a rota /send_message")  # Log para depuração
     data = request.get_json()
+    print(f"Dados recebidos: {data}")  # Log para depuração
     user_message = data.get('mensagem')
     user_id = data.get('user_id')
     

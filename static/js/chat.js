@@ -25,22 +25,23 @@ function sendMessage(event) {
 
     const userId = getUserId();
 
+    console.log("Enviando mensagem:", { mensagem: message, user_id: userId });  // Log para depuração
     fetch("/send_message", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mensagem: message, user_id: userId })
     })
     .then(response => {
-        console.log("Resposta do servidor:", response); // Adicionar log
+        console.log("Resposta do servidor:", response);  // Log para depuração
         if (!response.ok) throw new Error(`Erro ${response.status}: ${response.statusText}`);
         return response.json();
     })
     .then(data => {
-        console.log("Dados recebidos:", data); // Adicionar log
+        console.log("Dados recebidos:", data);  // Log para depuração
         displayMessage({ from: "her", text: data.resposta, timestamp: getTimestamp() });
     })
     .catch(error => {
-        console.error("Erro ao enviar mensagem:", error); // Log mais detalhado
+        console.error("Erro ao enviar mensagem:", error);  // Log mais detalhado
         displayMessage({ 
             from: "her", 
             text: "⚠️ Desculpe, algo deu errado. Tente novamente!", 
