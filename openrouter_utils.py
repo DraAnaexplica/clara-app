@@ -3,7 +3,7 @@ import requests
 import sqlite3
 from claraprompt import prompt_clara
 from datetime import datetime
-import pytz
+import pytz  # Biblioteca pra lidar com fuso horário
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
@@ -73,8 +73,8 @@ def gerar_resposta_clara(mensagem_usuario, user_id=""):
     data = {
         "model": "gryphe/mythomax-l2-13b:free",
         "messages": messages,
-        "temperature": 0.7,  # Ajuste conforme necessário
-        "max_tokens": 500    # Ajuste conforme necessário
+        "temperature": 0.7,
+        "max_tokens": 500
     }
 
     try:
@@ -97,4 +97,3 @@ def gerar_resposta_clara(mensagem_usuario, user_id=""):
     except Exception as e:
         print("Erro ao processar resposta do OpenRouter:", str(e), resposta if 'resposta' in locals() else "Sem resposta")
         return "⚠️ A Clara teve dificuldade em responder agora. Tenta de novo?"
-
