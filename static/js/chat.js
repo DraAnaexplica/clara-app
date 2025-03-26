@@ -25,6 +25,12 @@ function displayMessage(message) {
     `;
     
     chatBox.appendChild(msgDiv);
+    scrollToBottom();
+}
+
+// Função para rolar para o final do chat
+function scrollToBottom() {
+    const chatBox = document.getElementById("chat-box");
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
@@ -43,7 +49,7 @@ function sendMessage(event) {
     });
     
     messageInput.value = "";
-    document.querySelector('.send-btn').innerHTML = '<i class="fas fa-microphone"></i>';
+    updateSendButton();
     
     const userId = getUserId();
     
@@ -69,15 +75,27 @@ function sendMessage(event) {
     });
 }
 
-// Alternar entre microfone e ícone de enviar
-document.getElementById("mensagem").addEventListener("input", function(e) {
+// Atualiza o botão de enviar/microfone
+function updateSendButton() {
     const sendBtn = document.querySelector('.send-btn');
-    if (e.target.value.trim().length > 0) {
+    const messageInput = document.getElementById("mensagem");
+    
+    if (messageInput.value.trim().length > 0) {
         sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
     } else {
         sendBtn.innerHTML = '<i class="fas fa-microphone"></i>';
     }
-});
+}
+
+// Ajusta o layout quando o teclado aparece
+function adjustLayout() {
+    const chatArea = document.getElementById('chat-box');
+    const headerHeight = document.querySelector('header').offsetHeight;
+    const inputHeight = document.querySelector('.input-container').offsetHeight;
+    
+    chatArea.style.height = `calc(100vh - ${headerHeight}px - ${inputHeight}px)`;
+    scrollToBottom();
+}
 
 // Event Listeners
 document.addEventListener("DOMContentLoaded", function() {
@@ -86,11 +104,13 @@ document.addEventListener("DOMContentLoaded", function() {
         form.addEventListener("submit", sendMessage);
     }
     
-    // Mensagem inicial da Clara
-    setTimeout(() => {
-        displayMessage({
-            from: "her",
-            text: "Olá! Eu sou a Clara. Como posso te ajudar hoje?"
-        });
-    }, 500);
+    // Atualiza o botão quando o texto muda
+    document.getElementById("mensagem").addEventListener("input", updateSendButton);
+    
+    // Ajusta o layout inicialmente e quando a janela é redimensionada
+    adjustLayout();
+    window.addEventListener('resize', adjustLayout);
+    
+    // Foca no input quando a página carrega
+    document.getElementById("mensagem").focus();
 });

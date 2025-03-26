@@ -28,16 +28,28 @@ main {
     flex-direction: column;
 }
 
+/* Safe Area Insets */
+@supports (padding: max(0px)) {
+    body {
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+}
+
 /* Header Styles */
 header {
     background-color: var(--whatsapp-teal-green);
     color: white;
     padding: 10px 16px;
+    padding-top: calc(10px + env(safe-area-inset-top));
     display: flex;
     justify-content: space-between;
     align-items: center;
-    z-index: 10;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    height: 60px;
 }
 
 .header-left {
@@ -85,21 +97,9 @@ header i {
     background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='100%25' viewBox='0 0 800 800' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='a' width='100' height='100' patternUnits='userSpaceOnUse'%3E%3Ccircle fill='%23e5ddd5' cx='50' cy='50' r='40'/%3E%3C/pattern%3E%3C/defs%3E%3Crect fill='url(%23a)' width='800' height='800'/%3E%3C/svg%3E");
     display: flex;
     flex-direction: column;
-}
-
-.date-divider {
-    text-align: center;
-    margin: 15px 0;
-    position: relative;
-}
-
-.date-divider span {
-    background-color: var(--whatsapp-white);
-    padding: 5px 12px;
-    border-radius: 15px;
-    font-size: 12px;
-    color: var(--whatsapp-dark-gray);
-    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 80px; /* Espaço para o input */
+    margin-top: 60px; /* Altura do header */
 }
 
 .message {
@@ -144,10 +144,15 @@ header i {
 .input-container {
     background-color: var(--whatsapp-gray);
     padding: 8px 12px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
     display: flex;
     align-items: center;
     gap: 8px;
     border-top: 1px solid #ddd;
+    position: sticky;
+    bottom: 0;
+    z-index: 1000;
+    transform: translateZ(0);
 }
 
 .input-wrapper {
@@ -188,10 +193,25 @@ header i {
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    flex-shrink: 0;
 }
 
 .send-btn i {
     font-size: 18px;
+}
+
+/* Mobile Keyboard Adjustments */
+@media (max-height: 500px) {
+    .chat-area {
+        padding-bottom: 60px;
+    }
+    
+    .input-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
 }
 
 /* Responsive Adjustments */
@@ -202,6 +222,7 @@ header i {
     
     header {
         padding: 10px 12px;
+        padding-top: calc(10px + env(safe-area-inset-top));
     }
     
     .header-left {
@@ -210,5 +231,10 @@ header i {
     
     .header-right {
         gap: 15px;
+    }
+    
+    .chat-area {
+        margin-top: 60px;
+        padding-bottom: 70px;
     }
 }
