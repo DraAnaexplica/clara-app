@@ -74,7 +74,7 @@ def gerar_resposta_clara(mensagem_usuario, user_id=""):
     }
 
     data = {
-        "model": "openai/gpt-4o-search-preview",
+        "model": "deepseek/deepseek-chat-v3-0324:free",
         "messages": mensagens_formatadas
     }
 
