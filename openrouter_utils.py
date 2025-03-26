@@ -7,15 +7,28 @@ import pytz
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-# ... (init_db, save_message, get_history permanecem iguais)
+# Definir init_db no mesmo arquivo
+def init_db():
+    conn = sqlite3.connect("chat_history.db")
+    c = conn.cursor()
+    c.execute("""CREATE TABLE IF NOT EXISTS messages (
+        user_id TEXT,
+        sender TEXT,
+        message TEXT,
+        timestamp TEXT
+    )""")
+    conn.commit()
+    conn.close()
+
+# ... (save_message e get_history podem estar aqui ou em outro módulo)
 
 def gerar_resposta_clara(mensagem_usuario, user_id=""):
     if not OPENROUTER_API_KEY:
         print("Erro: OPENROUTER_API_KEY não configurada!")
         return "⚠️ A Clara teve dificuldade em responder agora. Tenta de novo?"
 
-    # Inicializa o banco de dados (se ainda não foi inicializado)
-    init_db()
+    # Inicializa o banco de dados
+    init_db()  # Agora está definida no mesmo arquivo
 
     # Salva a mensagem do usuário no banco de dados
     if user_id:
@@ -35,7 +48,7 @@ def gerar_resposta_clara(mensagem_usuario, user_id=""):
         "Content-Type": "application/json"
     }
     data = {
-        "model": "gryphe/mythomax-l2-13b:free",  # Alteração: modelo específico
+        "model": "gryphe/mythomax-l2-13b:free",  # Modelo solicitado
         "messages": [
             {"role": "system", "content": prompt_clara},
             {"role": "user", "content": f"Histórico da conversa:\n{history_text}\nHorário atual: {horario_atual} (GMT-3)\nMensagem: {mensagem_usuario}"}
