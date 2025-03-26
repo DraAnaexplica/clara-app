@@ -7,7 +7,7 @@ import pytz
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-# Definir init_db no mesmo arquivo
+# Banco de dados
 def init_db():
     conn = sqlite3.connect("chat_history.db")
     c = conn.cursor()
@@ -20,27 +20,52 @@ def init_db():
     conn.commit()
     conn.close()
 
-# ... (save_message e get_history podem estar aqui ou em outro módulo)
+def save_message(user_id, sender, message):
+    conn = sqlite3.connect("chat_history.db")
+    c = conn.cursor()
+    timestamp = datetime.now(pytz.timezone("America/Sao_Paulo")).strftime("%Y-%m-%d %H:%M:%S")
+    c.execute("INSERT INTO messages (user_id, sender, message, timestamp) VALUES (?, ?, ?, ?)",
+              (user_id, sender, message, timestamp))
+    conn.commit()
+    conn.close()
+
+def get_history(user_id):
+    conn = sqlite3.connect("chat_history.db")
+    c = conn.cursor()
+    c.execute("SELECT sender, message FROM messages WHERE user_id = ? ORDER BY timestamp DESC LIMIT 5", (user_id,))
+    history = c.fetchall()
+    conn.close()
+    return history
 
 def gerar_resposta_clara(mensagem_usuario, user_id=""):
     if not OPENROUTER_API_KEY:
         print("Erro: OPENROUTER_API_KEY não configurada!")
-        return "⚠️ A Clara teve dificuldade em responder agora. Tenta de novo?"
+        return "⚠️ A Clara não conseguiu responder agora. Tenta mais tarde?"
 
-    # Inicializa o banco de dados
-    init_db()  # Agora está definida no mesmo arquivo
-
-    # Salva a mensagem do usuário no banco de dados
+    init_db()
     if user_id:
-        save_message(user_id, "user", mensagem_usuario)
+        save_message(user_id, "Usuário", mensagem_usuario)
 
-    # Obtém o horário atual no fuso GMT-3
     fuso_horario = pytz.timezone("America/Sao_Paulo")
     horario_atual = datetime.now(fuso_horario).strftime("%H:%M")
 
-    # Recupera o histórico de mensagens
     history = get_history(user_id) if user_id else []
-    history_text = "\n".join([f"{sender}: {msg}" for sender, msg in reversed(history)])
+    mensagens_formatadas = [
+        {"role": "system", "content": prompt_clara},
+    ]
+
+    # Adiciona histórico
+    for sender, msg in reversed(history):
+        mensagens_formatadas.append({
+            "role": "user" if sender.lower() == "usuário" else "assistant",
+            "content": msg
+        })
+
+    # Adiciona a nova mensagem do usuário
+    mensagens_formatadas.append({
+        "role": "user",
+        "content": f"{mensagem_usuario}\n(Horário atual: {horario_atual})"
+    })
 
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
@@ -48,29 +73,23 @@ def gerar_resposta_clara(mensagem_usuario, user_id=""):
         "Content-Type": "application/json"
     }
     data = {
-        "model": "gryphe/mythomax-l2-13b:free",  # Modelo solicitado
-        "messages": [
-            {"role": "system", "content": prompt_clara},
-            {"role": "user", "content": f"Histórico da conversa:\n{history_text}\nHorário atual: {horario_atual} (GMT-3)\nMensagem: {mensagem_usuario}"}
-        ]
+        "model": "openai/gpt-3.5-turbo",  # ou "mistralai/mistral-7b-instruct", etc.
+        "messages": mensagens_formatadas
     }
 
     try:
-        print("Enviando requisição pro OpenRouter API...")
-        response = requests.post(url, headers=headers, json=data, timeout=5)
-        print("Resposta do OpenRouter API:", response.status_code, response.text)
+        print("Enviando requisição pro OpenRouter...")
+        response = requests.post(url, headers=headers, json=data, timeout=10)
         resposta = response.json()
-
         reply = resposta["choices"][0]["message"]["content"]
 
-        # Salva a resposta da Clara no banco de dados
         if user_id:
             save_message(user_id, "Clara", reply)
 
         return reply
     except requests.Timeout:
-        print("Erro: Timeout na requisição pro OpenRouter API")
-        return "⚠️ A Clara tá demorando pra responder. Tenta de novo?"
+        print("Erro: Timeout na requisição pro OpenRouter")
+        return "⏱️ A Clara demorou demais pra responder. Tenta de novo?"
     except Exception as e:
-        print("Erro ao processar resposta do OpenRouter:", str(e), resposta if 'resposta' in locals() else "Sem resposta")
-        return "⚠️ A Clara teve dificuldade em responder agora. Tenta de novo?"
+        print("Erro ao processar resposta da Clara:", str(e), resposta if 'resposta' in locals() else "Sem resposta")
+        return "⚠️ A Clara teve um problema técnico. Tenta de novo?"
