@@ -121,8 +121,10 @@ def send_message():
     data = {"contents": [{"parts": [{"text": full_prompt}]}]}
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
+        print("Erro: GEMINI_API_KEY não configurada no servidor!")
         return jsonify({'error': 'API key não configurada'}), 500
     
+    print("Enviando requisição para Gemini API...")
     response = requests.post(
         f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={api_key}",
         headers=headers,
@@ -130,6 +132,7 @@ def send_message():
     )
 
     if response.status_code == 200:
+        print("Resposta do Gemini API:", response.json())
         clara_response = response.json()['candidates'][0]['content']['parts'][0]['text']
         timestamp = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
         conn = sqlite3.connect('chat_history.db')
@@ -140,6 +143,7 @@ def send_message():
         conn.close()
         return jsonify({'resposta': clara_response})
     else:
+        print(f"Erro ao chamar Gemini API: {response.status_code} - {response.text}")
         return jsonify({'error': 'Erro ao processar a mensagem'}), 500
 
 if __name__ == '__main__':
