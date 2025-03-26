@@ -12,18 +12,13 @@
         <header>
             <img src="{{ url_for('static', filename='img/clara_avatar.png') }}" alt="Avatar da Clara" class="avatar">
             <h1>Conversa com Clara</h1>
-            <div class="header-icons">
-                <img src="{{ url_for('static', filename='img/search_icon.png') }}" alt="Pesquisar" class="header-icon">
-                <img src="{{ url_for('static', filename='img/menu_icon.png') }}" alt="Menu" class="header-icon">
-            </div>
         </header>
         <div id="chat-box" class="chat-area">
-            </div>
+            <!-- Mensagens serão inseridas aqui via JS -->
+        </div>
         <form id="mensagem-form" class="input-container" method="POST" action="#">
-            <img src="{{ url_for('static', filename='img/camera_icon.png') }}" alt="Câmera" class="input-icon">
             <input type="text" id="mensagem" name="mensagem" placeholder="Digite sua mensagem aqui..." required>
             <button type="submit">Enviar</button>
-            <img src="{{ url_for('static', filename='img/mic_icon.png') }}" alt="Microfone" class="input-icon">
         </form>
     </main>
 </body>

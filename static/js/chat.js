@@ -41,24 +41,10 @@ function sendMessage(event) {
 function displayMessage(message) {
     const chatBox = document.getElementById("chat-box");
     const msgDiv = document.createElement("div");
-    msgDiv.className = message.from === "me" ? "message user-message" : "message clara-message";
+    msgDiv.className = message.from === "me" ? "message me" : "message her";
     msgDiv.textContent = message.text;
-
-    // Adiciona o timestamp
-    const timestampDiv = document.createElement("div");
-    timestampDiv.className = "timestamp";
-    timestampDiv.textContent = getCurrentTime(); // Função para obter a hora atual
-    msgDiv.appendChild(timestampDiv);
-
     chatBox.appendChild(msgDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-function getCurrentTime() {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    return `${hours}:${minutes}`;
 }
 
 // Garante que o DOM esteja carregado antes de adicionar o evento
