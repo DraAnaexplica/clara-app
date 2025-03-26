@@ -107,7 +107,7 @@ def run_scheduler():
 scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
 scheduler_thread.start()
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def index():
     # Carregar o histórico de mensagens do banco de dados
     conn = sqlite3.connect('chat_history.db')
@@ -116,6 +116,71 @@ def index():
     messages = c.fetchall()
     conn.close()
     return render_template('index.html', messages=messages)
+
+@app.route('/', methods=['POST'])
+def index_post():
+    return jsonify({'error': 'Método POST não permitido neste endpoint. Use /send_message para enviar mensagens.'}), 405
+
+@app.route('/clara', methods=['POST'])
+def conversar_com_clara():
+    data = request.get_json()
+    mensagem = data.get('mensagem')
+    user_id = data.get('user_id', "")
+
+    if not mensagem:
+        return jsonify({'erro': 'Mensagem não fornecida'}), 400
+
+    # Obtém o horário atual no fuso GMT-3
+    current_time = get_current_time()
+
+    # Obtém o histórico de mensagens
+    conn = sqlite3.connect('chat_history.db')
+    c = conn.cursor()
+    c.execute("SELECT sender, message FROM messages WHERE user_id = ? ORDER BY timestamp DESC LIMIT 5", (user_id,))
+    history = c.fetchall()
+    conn.close()
+    history_text = "\n".join([f"{sender}: {msg}" for sender, msg in reversed(history)])
+
+    # Monta o prompt no formato de mensagens para o OpenRouter
+    messages = [
+        {"role": "system", "content": f"{prompt_clara}\nHorário atual: {current_time} (GMT-3)"},
+        {"role": "user", "content": f"Histórico da conversa:\n{history_text}\nUsuário: {mensagem}"}
+    ]
+
+    # Enviar requisição para o OpenRouter API
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    data = {
+        "model": "gryphe/mythomax-l2-13b:free",
+        "messages": messages,
+        "temperature": 0.7,
+        "max_tokens": 500
+    }
+    response = requests.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        headers=headers,
+        json=data
+    )
+
+    if response.status_code == 200:
+        clara_response = response.json()['choices'][0]['message']['content']
+        
+        # Salva a mensagem do usuário e a resposta da Clara no banco de dados
+        timestamp = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
+        conn = sqlite3.connect('chat_history.db')
+        c = conn.cursor()
+        c.execute("INSERT INTO messages (user_id, sender, message, timestamp) VALUES (?, ?, ?, ?)",
+                  (user_id, "user", mensagem, timestamp))
+        c.execute("INSERT INTO messages (user_id, sender, message, timestamp) VALUES (?, ?, ?, ?)",
+                  (user_id, "Clara", clara_response, timestamp))
+        conn.commit()
+        conn.close()
+
+        return jsonify({'resposta': clara_response})
+    else:
+        return jsonify({'erro': 'Erro ao processar a mensagem'}), 500
 
 @app.route('/send_message', methods=['POST'])
 def send_message():
@@ -182,4 +247,5 @@ def send_message():
         return jsonify({'error': 'Erro ao processar a mensagem'}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.getenv("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
