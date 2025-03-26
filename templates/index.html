@@ -6,7 +6,8 @@
     <title>Clara - WhatsApp Style</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="{{ url_for('static', filename='js/chat.js') }}" defer></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@emoji-mart/css/emoji-mart.css">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
 </head>
 <body>
     <div class="app-container">
@@ -31,8 +32,8 @@
         
         <form id="mensagem-form" class="input-container">
             <div class="input-wrapper">
-                <button type="button" class="emoji-btn">
-                    <i class="far fa-smile"></i>
+                <button type="button" id="emoji-picker-btn" class="emoji-btn">
+                    😊
                 </button>
                 <input type="text" id="mensagem" name="mensagem" placeholder="Digite uma mensagem" required>
                 <button type="button" class="attach-btn">
@@ -44,5 +45,8 @@
             </button>
         </form>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@emoji-mart/react/dist/index.umd.min.js"></script>
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 </body>
 </html>
