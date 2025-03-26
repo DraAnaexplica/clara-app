@@ -68,15 +68,13 @@ def send_proactive_message():
     conn.close()
 
     # Formatar o histórico para o prompt
-    history_text = "\n".join([f"{msg[0]}: {msg[1]}" for msg in history])
-    if not history_text:
-        history_text = "Nenhuma mensagem anterior."
+    history_text = "\n".join([f"{msg[0]}: {msg[1]}" for msg in history]) if history else "Nenhuma mensagem anterior."
 
     # Preparar o prompt para mensagem proativa
     current_time = get_current_time()
     messages = [
-        {"role": "system", "content": f"{prompt_proactive}\nHorário atual: {current_time} (GMT-3)"},
-        {"role": "user", "content": f"Histórico da conversa:\n{history_text}"}
+        {"role": "system", "content": prompt_proactive},
+        {"role": "user", "content": f"Horário atual: {current_time} (GMT-3)\nHistórico da conversa:\n{history_text}"}
     ]
 
     # Enviar requisição para o OpenRouter API
@@ -86,7 +84,7 @@ def send_proactive_message():
         "Content-Type": "application/json",
     }
     data = {
-        "model": "meta-llama/llama-3.1-8b-instruct:free",
+        "model": "gryphe/mythomax-l2-13b:free",
         "messages": messages,
         "temperature": 0.7,
         "max_tokens": 500
@@ -169,7 +167,7 @@ def conversar_com_clara():
         "Content-Type": "application/json",
     }
     data = {
-        "model": "meta-llama/llama-3.1-8b-instruct:free",
+        "model": "gryphe/mythomax-l2-13b:free",
         "messages": messages,
         "temperature": 0.7,
         "max_tokens": 500
@@ -226,7 +224,7 @@ def send_message():
         "Content-Type": "application/json",
     }
     data = {
-        "model": "meta-llama/llama-3.1-8b-instruct:free",
+        "model": "gryphe/mythomax-l2-13b:free",
         "messages": messages,
         "temperature": 0.7,
         "max_tokens": 500
