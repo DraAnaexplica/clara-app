@@ -9,7 +9,14 @@ function getUserId() {
     return userId;
 }
 
-// Função pra enviar mensagem
+// Função para formatar o timestamp
+function getTimestamp() {
+    const now = new Date();
+    return now.getHours().toString().padStart(2, '0') + ':' + 
+           now.getMinutes().toString().padStart(2, '0');
+}
+
+// Função para enviar mensagem
 function sendMessage(event) {
     event.preventDefault(); // Impede o comportamento padrão do formulário
 
@@ -17,7 +24,8 @@ function sendMessage(event) {
     const message = messageInput.value.trim();
     if (message === "") return;
 
-    displayMessage({ from: "me", text: message });
+    // Exibe a mensagem do usuário imediatamente
+    displayMessage({ from: "me", text: message, timestamp: getTimestamp() });
     messageInput.value = "";
 
     const userId = getUserId(); // Pega o user_id
@@ -25,26 +33,42 @@ function sendMessage(event) {
     fetch("/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mensagem: message, user_id: userId }) // Inclui o user_id
+        body: JSON.stringify({ mensagem: message, user_id: userId })
     })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Erro na resposta do servidor");
+            }
+            return response.json();
+        })
         .then(data => {
-            displayMessage({ from: "her", text: data.resposta });
+            displayMessage({ from: "her", text: data.resposta, timestamp: getTimestamp() });
         })
         .catch(error => {
             console.error("Erro:", error);
-            displayMessage({ from: "her", text: "⚠️ A Clara teve um problema. Tenta de novo?" });
+            displayMessage({ 
+                from: "her", 
+                text: "⚠️ Desculpe, algo deu errado. Tente novamente!", 
+                timestamp: getTimestamp() 
+            });
         });
 }
 
-// Função pra exibir mensagens
+// Função para exibir mensagens
 function displayMessage(message) {
     const chatBox = document.getElementById("chat-box");
     const msgDiv = document.createElement("div");
-    msgDiv.className = message.from === "me" ? "message me" : "message her";
+    msgDiv.className = message.from === "me" ? "message user-message" : "message clara-message";
     msgDiv.textContent = message.text;
+
+    // Adiciona o timestamp
+    const timestampSpan = document.createElement("span");
+    timestampSpan.className = "timestamp";
+    timestampSpan.textContent = message.timestamp;
+    msgDiv.appendChild(timestampSpan);
+
     chatBox.appendChild(msgDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
+    chatBox.scrollTop = chatBox.scrollHeight; // Rolagem automática
 }
 
 // Garante que o DOM esteja carregado antes de adicionar o evento
