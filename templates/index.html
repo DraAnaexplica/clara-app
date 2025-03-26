@@ -14,11 +14,16 @@
             <h1>Conversa com Clara</h1>
         </header>
         <div id="chat-box" class="chat-area">
-            <!-- Mensagens serão inseridas aqui via JS -->
+            {% for sender, message in messages %}
+                <div class="message {{ 'user-message' if sender == 'Você' else 'clara-message' }}">
+                    {{ message }}
+                    <span class="timestamp">{{ message.split()[-1] }}</span> <!-- Ajuste conforme o formato do timestamp -->
+                </div>
+            {% endfor %}
         </div>
         <form id="mensagem-form" class="input-container" method="POST" action="#">
             <input type="text" id="mensagem" name="mensagem" placeholder="Digite sua mensagem aqui..." required>
-            <button type="submit">➤</button>
+            <button type="submit">Enviar</button>
         </form>
     </main>
 </body>

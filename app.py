@@ -1,7 +1,6 @@
 import os
 import sqlite3
 import requests
-import json
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 from claraprompt import prompt_clara, prompt_proactive
@@ -12,10 +11,8 @@ import threading
 
 app = Flask(__name__)
 
-# Configuração do fuso horário (GMT-3)
 tz = pytz.timezone('America/Sao_Paulo')
 
-# Configuração do banco de dados SQLite
 def init_db():
     conn = sqlite3.connect('chat_history.db')
     c = conn.cursor()
@@ -29,49 +26,28 @@ def init_db():
 
 init_db()
 
-# Função para obter o horário atual em GMT-3
 def get_current_time():
     return datetime.now(tz).strftime('%H:%M')
 
-# Função para enviar mensagem proativa
 def send_proactive_message():
     print("Enviando mensagem proativa...")
-    
-    # Obter o histórico da conversa
     conn = sqlite3.connect('chat_history.db')
     c = conn.cursor()
     c.execute("SELECT sender, message FROM messages ORDER BY id DESC LIMIT 5")
     history = c.fetchall()
     conn.close()
 
-    # Formatar o histórico para o prompt
-    history_text = "\n".join([f"{msg[0]}: {msg[1]}" for msg in history])
-    if not history_text:
-        history_text = "Nenhuma mensagem anterior."
-
-    # Preparar o prompt para mensagem proativa
+    history_text = "\n".join([f"{msg[0]}: {msg[1]}" for msg in history]) or "Nenhuma mensagem anterior."
     current_time = get_current_time()
     full_prompt = f"""
     Horário atual: {current_time} (GMT-3)
-
     Histórico da conversa:
     {history_text}
-
     {prompt_proactive}
     """
 
-    # Enviar requisição para o Gemini API
-    print("Enviando requisição pro Gemini API...")
-    headers = {
-        "Content-Type": "application/json",
-    }
-    data = {
-        "contents": [{
-            "parts": [{
-                "text": full_prompt
-            }]
-        }]
-    }
+    headers = {"Content-Type": "application/json"}
+    data = {"contents": [{"parts": [{"text": full_prompt}]}]}
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         print("Erro: GEMINI_API_KEY não configurada!")
@@ -84,10 +60,7 @@ def send_proactive_message():
     )
 
     if response.status_code == 200:
-        print("Resposta do Gemini API:", response.json())
         clara_response = response.json()['candidates'][0]['content']['parts'][0]['text']
-        
-        # Salvar a mensagem proativa no banco de dados
         timestamp = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
         conn = sqlite3.connect('chat_history.db')
         c = conn.cursor()
@@ -99,23 +72,18 @@ def send_proactive_message():
     else:
         print(f"Erro ao enviar mensagem proativa: {response.status_code} - {response.text}")
 
-# Função para rodar o agendador em uma thread separada
 def run_scheduler():
-    # Agendar mensagens proativas em horários específicos (em GMT-3)
-    schedule.every().day.at("11:00").do(send_proactive_message)  # Mensagem às 11:00
-    schedule.every().day.at("11:30").do(send_proactive_message)  # Mensagem às 11:30
-
+    schedule.every().day.at("11:00").do(send_proactive_message)
+    schedule.every().day.at("11:30").do(send_proactive_message)
     while True:
         schedule.run_pending()
-        time.sleep(60)  # Verifica a cada minuto
+        time.sleep(60)
 
-# Iniciar o agendador em uma thread separada
 scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
 scheduler_thread.start()
 
 @app.route('/')
 def index():
-    # Carregar o histórico de mensagens do banco de dados
     conn = sqlite3.connect('chat_history.db')
     c = conn.cursor()
     c.execute("SELECT sender, message FROM messages ORDER BY id")
@@ -125,11 +93,10 @@ def index():
 
 @app.route('/send_message', methods=['POST'])
 def send_message():
-    data = request.get_json()  # Alterado para JSON, conforme o chat.js
+    data = request.get_json()
     user_message = data.get('mensagem')
     user_id = data.get('user_id')
     
-    # Salvar a mensagem do usuário no banco de dados
     timestamp = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
     conn = sqlite3.connect('chat_history.db')
     c = conn.cursor()
@@ -137,39 +104,21 @@ def send_message():
               ("Você", user_message, timestamp))
     conn.commit()
 
-    # Obter o histórico das últimas 5 mensagens
     c.execute("SELECT sender, message FROM messages ORDER BY id DESC LIMIT 5")
     history = c.fetchall()
     conn.close()
 
-    # Formatar o histórico para o prompt
-    history_text = "\n".join([f"{msg[0]}: {msg[1]}" for msg in history])
-    if not history_text:
-        history_text = "Nenhuma mensagem anterior."
-
-    # Preparar o prompt para o Gemini API
+    history_text = "\n".join([f"{msg[0]}: {msg[1]}" for msg in history]) or "Nenhuma mensagem anterior."
     current_time = get_current_time()
     full_prompt = f"""
     Horário atual: {current_time} (GMT-3)
-
     Histórico da conversa:
     {history_text}
-
     {prompt_clara}
     """
 
-    # Enviar requisição para o Gemini API
-    print("Enviando requisição pro Gemini API...")
-    headers = {
-        "Content-Type": "application/json",
-    }
-    data = {
-        "contents": [{
-            "parts": [{
-                "text": full_prompt
-            }]
-        }]
-    }
+    headers = {"Content-Type": "application/json"}
+    data = {"contents": [{"parts": [{"text": full_prompt}]}]}
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         return jsonify({'error': 'API key não configurada'}), 500
@@ -181,10 +130,7 @@ def send_message():
     )
 
     if response.status_code == 200:
-        print("Resposta do Gemini API:", response.json())
         clara_response = response.json()['candidates'][0]['content']['parts'][0]['text']
-        
-        # Salvar a resposta da Clara no banco de dados
         timestamp = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
         conn = sqlite3.connect('chat_history.db')
         c = conn.cursor()
@@ -192,11 +138,10 @@ def send_message():
                   ("Clara", clara_response, timestamp))
         conn.commit()
         conn.close()
-
         return jsonify({'resposta': clara_response})
     else:
         return jsonify({'error': 'Erro ao processar a mensagem'}), 500
 
 if __name__ == '__main__':
-    port = int(os.getenv("PORT", 5000))  # Usa a porta do Render ou 5000 localmente
-    app.run(host="0.0.0.0", port=port, debug=False)  # Debug=False para produção
+    port = int(os.getenv("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)

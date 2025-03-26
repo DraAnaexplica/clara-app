@@ -1,3 +1,20 @@
+// Gera ou recupera o user_id do localStorage
+function getUserId() {
+    let userId = localStorage.getItem('user_id');
+    if (!userId) {
+        userId = 'user-' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('user_id', userId);
+    }
+    return userId;
+}
+
+// Função para formatar o timestamp
+function getTimestamp() {
+    const now = new Date();
+    return now.getHours().toString().padStart(2, '0') + ':' + 
+           now.getMinutes().toString().padStart(2, '0');
+}
+
 // Função para enviar mensagem
 function sendMessage(event) {
     event.preventDefault();
@@ -32,3 +49,28 @@ function sendMessage(event) {
         });
     });
 }
+
+// Função para exibir mensagens
+function displayMessage(message) {
+    const chatBox = document.getElementById("chat-box");
+    const msgDiv = document.createElement("div");
+    msgDiv.className = message.from === "me" ? "message user-message" : "message clara-message";
+    msgDiv.textContent = message.text;
+
+    const timestampSpan = document.createElement("span");
+    timestampSpan.className = "timestamp";
+    timestampSpan.textContent = message.timestamp;
+    msgDiv.appendChild(timestampSpan);
+
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const form = document.getElementById("mensagem-form");
+    if (form) {
+        form.addEventListener("submit", sendMessage);
+    } else {
+        console.error("Formulário com ID 'mensagem-form' não encontrado!");
+    }
+});
