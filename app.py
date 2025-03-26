@@ -3,7 +3,7 @@ import requests
 import sqlite3
 import json
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 from claraprompt import prompt_clara, prompt_proactive
 import pytz
 import schedule
@@ -115,7 +115,8 @@ def gerar_resposta_clara(mensagem_usuario, user_id=""):
 
 # Função para enviar mensagem proativa
 def send_proactive_message():
-    print("Enviando mensagem proativa...")
+    current_time_gmt3 = get_current_time()
+    print(f"[GMT-3 {current_time_gmt3}] Enviando mensagem proativa...")
     
     # Obter o histórico da conversa
     conn = sqlite3.connect('chat_history.db')
@@ -162,20 +163,22 @@ def send_proactive_message():
         timestamp = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
         conn = sqlite3.connect('chat_history.db')
         c = conn.cursor()
-        c.execute("INSERT INTO messages (sender, message, timestamp) VALUES (?, ?, ?)",
-                  ("Clara", clara_response, timestamp))
+        c.execute("INSERT INTO messages (user_id, sender, message, timestamp) VALUES (?, ?, ?, ?)",
+                  ("", "Clara", clara_response, timestamp))
         conn.commit()
         conn.close()
-        print(f"Mensagem proativa enviada: {clara_response}")
+        print(f"[GMT-3 {current_time}] Mensagem proativa enviada: {clara_response}")
     else:
-        print(f"Erro ao enviar mensagem proativa: {response.status_code} - {response.text}")
+        print(f"[GMT-3 {current_time}] Erro ao enviar mensagem proativa: {response.status_code} - {response.text}")
 
 # Função para rodar o agendador em uma thread separada
 def run_scheduler():
-    # Agendar mensagens proativas em horários específicos (em GMT-3)
-    schedule.every().day.at("11:00").do(send_proactive_message)  # Mensagem às 11:00
-    schedule.every().day.at("11:30").do(send_proactive_message)  # Mensagem às 11:30
+    # Agendar mensagens proativas em horários específicos (em UTC, ajustado para GMT-3)
+    # 11:00 GMT-3 = 14:00 UTC, 11:30 GMT-3 = 14:30 UTC
+    schedule.every().day.at("14:00").do(send_proactive_message)  # 11:00 GMT-3
+    schedule.every().day.at("14:30").do(send_proactive_message)  # 11:30 GMT-3
 
+    print("Agendador iniciado. Aguardando horários: 14:00 UTC (11:00 GMT-3) e 14:30 UTC (11:30 GMT-3)")
     while True:
         schedule.run_pending()
         time.sleep(60)  # Verifica a cada minuto
@@ -184,7 +187,7 @@ def run_scheduler():
 scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
 scheduler_thread.start()
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def index():
     # Carregar o histórico de mensagens do banco de dados
     conn = sqlite3.connect('chat_history.db')
@@ -193,6 +196,10 @@ def index():
     messages = c.fetchall()
     conn.close()
     return render_template('index.html', messages=messages)
+
+@app.route('/', methods=['POST'])
+def index_post():
+    return jsonify({'error': 'Método POST não permitido neste endpoint. Use /send_message para enviar mensagens.'}), 405
 
 @app.route('/clara', methods=['POST'])
 def conversar_com_clara():
