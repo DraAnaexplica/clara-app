@@ -73,7 +73,8 @@ def gerar_resposta_clara(mensagem_usuario, user_id=""):
         "Content-Type": "application/json"
     }
     data = {
-        "model": "openai/gpt-3.5-turbo",  # ou "mistralai/mistral-7b-instruct", etc.
+       "model": "gryphe/mythomax-l2-13b",
+ # ou "mistralai/mistral-7b-instruct", etc.
         "messages": mensagens_formatadas
     }
 
