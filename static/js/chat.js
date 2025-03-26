@@ -13,7 +13,7 @@ function formatTime(date = new Date()) {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-// Função pra exibir mensagens com estilo WhatsApp
+// Função pra exibir mensagens
 function displayMessage(message) {
     const chatBox = document.getElementById("chat-box");
     const msgDiv = document.createElement("div");
@@ -31,7 +31,10 @@ function displayMessage(message) {
 // Função para rolar para o final do chat
 function scrollToBottom() {
     const chatBox = document.getElementById("chat-box");
-    chatBox.scrollTop = chatBox.scrollHeight;
+    // Usamos setTimeout para garantir que o DOM foi atualizado
+    setTimeout(() => {
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }, 50);
 }
 
 // Função pra enviar mensagem
@@ -42,7 +45,6 @@ function sendMessage(event) {
     const message = messageInput.value.trim();
     if (message === "") return;
     
-    // Exibe a mensagem do usuário
     displayMessage({ 
         from: "me", 
         text: message 
@@ -53,7 +55,6 @@ function sendMessage(event) {
     
     const userId = getUserId();
     
-    // Envia para o servidor
     fetch("/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -82,35 +83,70 @@ function updateSendButton() {
     
     if (messageInput.value.trim().length > 0) {
         sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+        sendBtn.style.backgroundColor = 'var(--whatsapp-green)';
     } else {
         sendBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+        sendBtn.style.backgroundColor = 'var(--whatsapp-teal-green)';
     }
 }
 
 // Ajusta o layout quando o teclado aparece
-function adjustLayout() {
-    const chatArea = document.getElementById('chat-box');
-    const headerHeight = document.querySelector('header').offsetHeight;
-    const inputHeight = document.querySelector('.input-container').offsetHeight;
+function handleKeyboard() {
+    const visualViewport = window.visualViewport;
+    const inputContainer = document.querySelector('.input-container');
     
-    chatArea.style.height = `calc(100vh - ${headerHeight}px - ${inputHeight}px)`;
-    scrollToBottom();
+    if (visualViewport) {
+        const viewportHeight = visualViewport.height;
+        const windowHeight = window.innerHeight;
+        const keyboardHeight = windowHeight - viewportHeight;
+        
+        if (keyboardHeight > 0) {
+            inputContainer.style.transform = `translateY(-${keyboardHeight}px)`;
+        } else {
+            inputContainer.style.transform = 'translateY(0)';
+        }
+        
+        scrollToBottom();
+    }
 }
 
-// Event Listeners
-document.addEventListener("DOMContentLoaded", function() {
+// Inicialização
+function init() {
     const form = document.getElementById("mensagem-form");
     if (form) {
         form.addEventListener("submit", sendMessage);
     }
     
-    // Atualiza o botão quando o texto muda
     document.getElementById("mensagem").addEventListener("input", updateSendButton);
     
-    // Ajusta o layout inicialmente e quando a janela é redimensionada
-    adjustLayout();
-    window.addEventListener('resize', adjustLayout);
+    // Configura observadores de teclado e redimensionamento
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', handleKeyboard);
+    }
+    
+    window.addEventListener('resize', scrollToBottom);
     
     // Foca no input quando a página carrega
     document.getElementById("mensagem").focus();
-});
+    
+    // Garante que a área de chat tenha a altura correta
+    adjustChatHeight();
+}
+
+// Ajusta a altura da área de chat
+function adjustChatHeight() {
+    const header = document.querySelector('header');
+    const inputContainer = document.querySelector('.input-container');
+    const chatArea = document.getElementById('chat-box');
+    
+    if (header && inputContainer && chatArea) {
+        const headerHeight = header.offsetHeight;
+        const inputHeight = inputContainer.offsetHeight;
+        
+        chatArea.style.height = `calc(100vh - ${headerHeight}px - ${inputHeight}px)`;
+        scrollToBottom();
+    }
+}
+
+// Quando o DOM estiver carregado
+document.addEventListener("DOMContentLoaded", init);

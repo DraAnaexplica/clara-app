@@ -11,32 +11,29 @@
     --whatsapp-timestamp: rgba(0, 0, 0, 0.45);
 }
 
-/* Base Styles */
-body, html {
+/* Reset e Base */
+html, body {
     margin: 0;
     padding: 0;
     height: 100%;
+    width: 100%;
+    overflow-x: hidden;
     font-family: 'Segoe UI', Helvetica Neue, Helvetica, Lucida Grande, Arial, sans-serif;
-    background-color: var(--whatsapp-chat-bg);
+    -webkit-text-size-adjust: 100%;
+    touch-action: manipulation;
 }
 
-main {
-    position: relative;
-    height: 100vh;
-    overflow: hidden;
+/* Container Principal */
+.app-container {
     display: flex;
     flex-direction: column;
+    height: 100vh;
+    height: -webkit-fill-available;
+    max-height: 100%;
+    position: relative;
 }
 
-/* Safe Area Insets */
-@supports (padding: max(0px)) {
-    body {
-        padding-left: env(safe-area-inset-left);
-        padding-right: env(safe-area-inset-right);
-    }
-}
-
-/* Header Styles */
+/* Header Fixo */
 header {
     background-color: var(--whatsapp-teal-green);
     color: white;
@@ -49,18 +46,21 @@ header {
     top: 0;
     z-index: 1000;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    height: 60px;
+    min-height: 60px;
 }
 
 .header-left {
     display: flex;
     align-items: center;
     gap: 15px;
+    flex: 1;
+    min-width: 0;
 }
 
 .header-right {
     display: flex;
     gap: 20px;
+    flex-shrink: 0;
 }
 
 .avatar {
@@ -68,12 +68,20 @@ header {
     height: 40px;
     border-radius: 50%;
     object-fit: cover;
+    flex-shrink: 0;
+}
+
+.contact-info {
+    min-width: 0;
 }
 
 .contact-info h1 {
     font-size: 16px;
     font-weight: 500;
     margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .status {
@@ -81,27 +89,31 @@ header {
     margin: 2px 0 0;
     font-weight: 400;
     opacity: 0.8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 header i {
     font-size: 18px;
     cursor: pointer;
+    flex-shrink: 0;
 }
 
-/* Chat Area Styles */
+/* Área de Chat - Flexível */
 .chat-area {
     flex: 1;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     padding: 10px 16px;
     background-color: var(--whatsapp-chat-bg);
     background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='100%25' viewBox='0 0 800 800' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='a' width='100' height='100' patternUnits='userSpaceOnUse'%3E%3Ccircle fill='%23e5ddd5' cx='50' cy='50' r='40'/%3E%3C/pattern%3E%3C/defs%3E%3Crect fill='url(%23a)' width='800' height='800'/%3E%3C/svg%3E");
     display: flex;
     flex-direction: column;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 80px; /* Espaço para o input */
-    margin-top: 60px; /* Altura do header */
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* Mensagens */
 .message {
     margin-bottom: 8px;
     padding: 8px 12px;
@@ -111,6 +123,7 @@ header i {
     position: relative;
     font-size: 14.2px;
     line-height: 1.4;
+    word-break: break-word;
 }
 
 .message.me {
@@ -140,7 +153,7 @@ header i {
     color: rgba(255, 255, 255, 0.8);
 }
 
-/* Input Area Styles */
+/* Área de Input - Fixa na parte inferior */
 .input-container {
     background-color: var(--whatsapp-gray);
     padding: 8px 12px;
@@ -152,7 +165,8 @@ header i {
     position: sticky;
     bottom: 0;
     z-index: 1000;
-    transform: translateZ(0);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .input-wrapper {
@@ -162,6 +176,7 @@ header i {
     background-color: white;
     border-radius: 20px;
     padding: 5px 10px;
+    min-height: 40px;
 }
 
 .input-wrapper input {
@@ -171,6 +186,7 @@ header i {
     padding: 8px 12px;
     font-size: 15px;
     background: transparent;
+    min-width: 0;
 }
 
 .emoji-btn, .attach-btn {
@@ -180,6 +196,7 @@ header i {
     font-size: 20px;
     cursor: pointer;
     padding: 5px;
+    flex-shrink: 0;
 }
 
 .send-btn {
@@ -200,21 +217,22 @@ header i {
     font-size: 18px;
 }
 
-/* Mobile Keyboard Adjustments */
+/* Ajustes para Teclado Virtual */
 @media (max-height: 500px) {
     .chat-area {
         padding-bottom: 60px;
     }
-    
-    .input-container {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
+}
+
+/* Ajustes para Safe Area em Dispositivos com Notch */
+@supports (padding: max(0px)) {
+    body {
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
     }
 }
 
-/* Responsive Adjustments */
+/* Responsividade */
 @media (max-width: 600px) {
     .message {
         max-width: 80%;
@@ -233,8 +251,7 @@ header i {
         gap: 15px;
     }
     
-    .chat-area {
-        margin-top: 60px;
-        padding-bottom: 70px;
+    .input-wrapper {
+        min-height: 35px;
     }
 }
