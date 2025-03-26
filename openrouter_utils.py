@@ -73,7 +73,8 @@ def gerar_resposta_clara(mensagem_usuario, user_id=""):
         "Content-Type": "application/json"
     }
     data = {
-      model = "nousresearch/nous-hermes-2-mistral"
+    "model": "nous/hermes-2-pro-mistral"
+
 
  # ou "mistralai/mistral-7b-instruct", etc.
         "messages": mensagens_formatadas
