@@ -74,7 +74,7 @@ def gerar_resposta_clara(mensagem_usuario, user_id=""):
     }
 
     data = {
-        "model": "google/gemini-2.5-pro-exp-03-25:free",
+        "model": "openai/gpt-4o-search-preview",
         "messages": mensagens_formatadas
     }
 
