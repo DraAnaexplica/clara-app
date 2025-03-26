@@ -5,21 +5,25 @@ from claraprompt import prompt_clara
 from datetime import datetime
 import pytz
 
+# Carrega a chave da OpenRouter pela variável de ambiente
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-# Banco de dados
+# Inicializa o banco SQLite se não existir
 def init_db():
     conn = sqlite3.connect("chat_history.db")
     c = conn.cursor()
-    c.execute("""CREATE TABLE IF NOT EXISTS messages (
-        user_id TEXT,
-        sender TEXT,
-        message TEXT,
-        timestamp TEXT
-    )""")
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS messages (
+            user_id TEXT,
+            sender TEXT,
+            message TEXT,
+            timestamp TEXT
+        )
+    """)
     conn.commit()
     conn.close()
 
+# Salva uma nova mensagem no banco
 def save_message(user_id, sender, message):
     conn = sqlite3.connect("chat_history.db")
     c = conn.cursor()
@@ -29,6 +33,7 @@ def save_message(user_id, sender, message):
     conn.commit()
     conn.close()
 
+# Busca o histórico recente do usuário
 def get_history(user_id):
     conn = sqlite3.connect("chat_history.db")
     c = conn.cursor()
@@ -37,6 +42,7 @@ def get_history(user_id):
     conn.close()
     return history
 
+# Gera resposta da Clara
 def gerar_resposta_clara(mensagem_usuario, user_id=""):
     if not OPENROUTER_API_KEY:
         print("Erro: OPENROUTER_API_KEY não configurada!")
@@ -46,22 +52,25 @@ def gerar_resposta_clara(mensagem_usuario, user_id=""):
     if user_id:
         save_message(user_id, "Usuário", mensagem_usuario)
 
+    # Fuso horário do Brasil
     fuso_horario = pytz.timezone("America/Sao_Paulo")
     horario_atual = datetime.now(fuso_horario).strftime("%H:%M")
 
-    history = get_history(user_id) if user_id else []
+    # Prepara mensagens para o modelo
     mensagens_formatadas = [
-        {"role": "system", "content": prompt_clara},
+        { "role": "system", "content": prompt_clara }
     ]
 
-    # Adiciona histórico
-    for sender, msg in reversed(history):
-        mensagens_formatadas.append({
-            "role": "user" if sender.lower() == "usuário" else "assistant",
-            "content": msg
-        })
+    # Adiciona histórico ao contexto
+    if user_id:
+        historico = get_history(user_id)
+        for sender, msg in reversed(historico):
+            mensagens_formatadas.append({
+                "role": "user" if sender.lower() == "usuário" else "assistant",
+                "content": msg
+            })
 
-    # Adiciona a nova mensagem do usuário
+    # Adiciona a nova mensagem do usuário com horário
     mensagens_formatadas.append({
         "role": "user",
         "content": f"{mensagem_usuario}\n(Horário atual: {horario_atual})"
@@ -72,11 +81,10 @@ def gerar_resposta_clara(mensagem_usuario, user_id=""):
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json"
     }
+
+    # Modelo: Nous Hermes 2 Pro (base Mistral refinado)
     data = {
-    "model": "nous/hermes-2-pro-mistral"
-
-
- # ou "mistralai/mistral-7b-instruct", etc.
+        "model": "nous/hermes-2-pro-mistral",  # você pode trocar aqui por outro se quiser testar
         "messages": mensagens_formatadas
     }
 
