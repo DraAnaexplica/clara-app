@@ -1,8 +1,19 @@
-// Variáveis globais
-let emojiPicker = null;
-let pickerContainer = null;
+// Gera ou recupera o user_id do localStorage
+function getUserId() {
+    let userId = localStorage.getItem('user_id');
+    if (!userId) {
+        userId = 'user-' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('user_id', userId);
+    }
+    return userId;
+}
 
-// Função para exibir mensagens
+// Função para formatar a hora
+function formatTime(date = new Date()) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// Função pra exibir mensagens
 function displayMessage(message) {
     const chatBox = document.getElementById("chat-box");
     const msgDiv = document.createElement("div");
@@ -17,24 +28,18 @@ function displayMessage(message) {
     scrollToBottom();
 }
 
-// Função para rolar para o final
+// Função para rolar para o final do chat
 function scrollToBottom() {
     const chatBox = document.getElementById("chat-box");
+    // Usamos setTimeout para garantir que o DOM foi atualizado
     setTimeout(() => {
         chatBox.scrollTop = chatBox.scrollHeight;
     }, 50);
 }
 
-// Função para formatar hora
-function formatTime(date = new Date()) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-// Função para enviar mensagem
+// Função pra enviar mensagem
 function sendMessage(event) {
-    if (event && typeof event.preventDefault === 'function') {
-        event.preventDefault();
-    }
+    event.preventDefault();
     
     const messageInput = document.getElementById("mensagem");
     const message = messageInput.value.trim();
@@ -48,16 +53,30 @@ function sendMessage(event) {
     messageInput.value = "";
     updateSendButton();
     
-    // Simulação de resposta (substitua pelo seu código real)
-    setTimeout(() => {
+    const userId = getUserId();
+    
+    fetch("/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mensagem: message, user_id: userId })
+    })
+    .then(response => response.json())
+    .then(data => {
         displayMessage({ 
             from: "her", 
-            text: "Mensagem recebida! 😊"
+            text: data.resposta 
         });
-    }, 1000);
+    })
+    .catch(error => {
+        console.error("Erro:", error);
+        displayMessage({ 
+            from: "her", 
+            text: "⚠️ Ocorreu um erro. Por favor, tente novamente."
+        });
+    });
 }
 
-// Atualiza botão de enviar
+// Atualiza o botão de enviar/microfone
 function updateSendButton() {
     const sendBtn = document.querySelector('.send-btn');
     const messageInput = document.getElementById("mensagem");
@@ -71,59 +90,63 @@ function updateSendButton() {
     }
 }
 
-// Inicializa o emoji picker
-function initEmojiPicker() {
-    pickerContainer = document.createElement('div');
-    pickerContainer.className = 'emoji-picker-container';
-    document.body.appendChild(pickerContainer);
-
-    emojiPicker = new EmojiMart.Picker({
-        parent: pickerContainer,
-        onEmojiSelect: (emoji) => {
-            const input = document.getElementById('mensagem');
-            input.value += emoji.native;
-            input.focus();
-            
-            if (input.value.trim() === emoji.native) {
-                setTimeout(() => {
-                    sendMessage({ preventDefault: () => {} });
-                    input.value = "";
-                }, 50);
-            }
-        },
-        locale: 'pt',
-        theme: 'light',
-        previewPosition: 'none'
-    });
-
-    // Fecha o picker ao clicar fora
-    document.addEventListener('click', (e) => {
-        const emojiBtn = document.getElementById('emoji-picker-btn');
-        if (!pickerContainer.contains(e.target) {
-            pickerContainer.classList.remove('visible');
-            emojiBtn.classList.remove('active');
-        }
-    });
-}
-
-// Alterna o emoji picker
-function toggleEmojiPicker(e) {
-    e.stopPropagation();
-    const btn = document.getElementById('emoji-picker-btn');
+// Ajusta o layout quando o teclado aparece
+function handleKeyboard() {
+    const visualViewport = window.visualViewport;
+    const inputContainer = document.querySelector('.input-container');
     
-    pickerContainer.classList.toggle('visible');
-    btn.classList.toggle('active');
+    if (visualViewport) {
+        const viewportHeight = visualViewport.height;
+        const windowHeight = window.innerHeight;
+        const keyboardHeight = windowHeight - viewportHeight;
+        
+        if (keyboardHeight > 0) {
+            inputContainer.style.transform = `translateY(-${keyboardHeight}px)`;
+        } else {
+            inputContainer.style.transform = 'translateY(0)';
+        }
+        
+        scrollToBottom();
+    }
 }
 
 // Inicialização
 function init() {
-    initEmojiPicker();
+    const form = document.getElementById("mensagem-form");
+    if (form) {
+        form.addEventListener("submit", sendMessage);
+    }
     
-    document.getElementById('emoji-picker-btn').addEventListener('click', toggleEmojiPicker);
-    document.getElementById('mensagem-form').addEventListener('submit', sendMessage);
-    document.getElementById('mensagem').addEventListener('input', updateSendButton);
-    document.getElementById('mensagem').focus();
+    document.getElementById("mensagem").addEventListener("input", updateSendButton);
+    
+    // Configura observadores de teclado e redimensionamento
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', handleKeyboard);
+    }
+    
+    window.addEventListener('resize', scrollToBottom);
+    
+    // Foca no input quando a página carrega
+    document.getElementById("mensagem").focus();
+    
+    // Garante que a área de chat tenha a altura correta
+    adjustChatHeight();
 }
 
-// Quando o DOM estiver pronto
-document.addEventListener('DOMContentLoaded', init);
+// Ajusta a altura da área de chat
+function adjustChatHeight() {
+    const header = document.querySelector('header');
+    const inputContainer = document.querySelector('.input-container');
+    const chatArea = document.getElementById('chat-box');
+    
+    if (header && inputContainer && chatArea) {
+        const headerHeight = header.offsetHeight;
+        const inputHeight = inputContainer.offsetHeight;
+        
+        chatArea.style.height = `calc(100vh - ${headerHeight}px - ${inputHeight}px)`;
+        scrollToBottom();
+    }
+}
+
+// Quando o DOM estiver carregado
+document.addEventListener("DOMContentLoaded", init);
