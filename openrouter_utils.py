@@ -84,7 +84,7 @@ def gerar_resposta_clara(mensagem_usuario, user_id=""):
 
     # Modelo: Nous Hermes 2 Pro (base Mistral refinado)
     data = {
-    "model": "teknium/openhermes-2.5-mistral-7b",
+    "google/gemini-2.5-pro-exp-03-25:free",
     "messages": mensagens_formatadas
 }
 
