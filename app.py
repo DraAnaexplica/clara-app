@@ -72,8 +72,13 @@ def send_proactive_message():
             }]
         }]
     }
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        print("Erro: GEMINI_API_KEY não configurada!")
+        return
+    
     response = requests.post(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" + os.getenv("GEMINI_API_KEY"),
+        f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={api_key}",
         headers=headers,
         json=data
     )
@@ -120,7 +125,9 @@ def index():
 
 @app.route('/send_message', methods=['POST'])
 def send_message():
-    user_message = request.form['message']
+    data = request.get_json()  # Alterado para JSON, conforme o chat.js
+    user_message = data.get('mensagem')
+    user_id = data.get('user_id')
     
     # Salvar a mensagem do usuário no banco de dados
     timestamp = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
@@ -163,8 +170,12 @@ def send_message():
             }]
         }]
     }
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        return jsonify({'error': 'API key não configurada'}), 500
+    
     response = requests.post(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" + os.getenv("GEMINI_API_KEY"),
+        f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={api_key}",
         headers=headers,
         json=data
     )
@@ -182,9 +193,10 @@ def send_message():
         conn.commit()
         conn.close()
 
-        return jsonify({'response': clara_response})
+        return jsonify({'resposta': clara_response})
     else:
         return jsonify({'error': 'Erro ao processar a mensagem'}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.getenv("PORT", 5000))  # Usa a porta do Render ou 5000 localmente
+    app.run(host="0.0.0.0", port=port, debug=False)  # Debug=False para produção
