@@ -66,10 +66,10 @@ function displayMessage(message) {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-    const form = document.getElementById("mensagem-form");
-    if (form) {
-        form.addEventListener("submit", sendMessage);
-    } else {
-        console.error("Formulário com ID 'mensagem-form' não encontrado!");
-    }
-});
+    const form = document.getElement "Não encontrado" no desktop (`draanaexplica.onrender.com`) indica que o Render não está conseguindo localizar o serviço ou a rota solicitada, o que é consistente com os logs anteriores que mostravam um erro **404 Not Found** para a rota `/`. Isso sugere que o Flask não está conseguindo renderizar o `index.html`, provavelmente devido a um problema na estrutura do projeto ou na configuração do Render. Vamos resolver isso e garantir que o app volte a funcionar como antes, além de ajustar o layout para parecer mais com o WhatsApp, como você originalmente pediu.
+
+---
+
+### Análise do problema
+1. **Erro 404 na rota `/`**:
+   - Os logs do Render mostram que as requisições GET para `/` retornam 404:
