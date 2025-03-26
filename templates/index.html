@@ -4,65 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Converse com a Clara</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f0f0f0;
-        }
-        .chat-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .message {
-            margin-bottom: 15px;
-        }
-        .message.user {
-            text-align: right;
-        }
-        .message.clara {
-            text-align: left;
-        }
-        .message p {
-            display: inline-block;
-            padding: 10px;
-            border-radius: 10px;
-        }
-        .message.user p {
-            background-color: #007bff;
-            color: white;
-        }
-        .message.clara p {
-            background-color: #e0e0e0;
-        }
-        form {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        input[type="text"] {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
     <div class="chat-container">
@@ -79,56 +21,6 @@
             <button type="submit">Enviar</button>
         </form>
     </div>
-
-    <script>
-        const form = document.getElementById('message-form');
-        const chat = document.getElementById('chat');
-        const messageInput = document.getElementById('message-input');
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const message = messageInput.value.trim();
-            if (!message) return;
-
-            // Adiciona a mensagem do usuário ao chat
-            const userMessage = document.createElement('div');
-            userMessage.className = 'message user';
-            userMessage.innerHTML = `<p><strong>Você:</strong> ${message}</p>`;
-            chat.appendChild(userMessage);
-
-            // Limpa o input
-            messageInput.value = '';
-
-            // Envia a mensagem para o servidor
-            try {
-                const response = await fetch('/send_message', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: new URLSearchParams({ message })
-                });
-
-                const data = await response.json();
-
-                if (data.response) {
-                    // Adiciona a resposta da Clara ao chat
-                    const claraMessage = document.createElement('div');
-                    claraMessage.className = 'message clara';
-                    claraMessage.innerHTML = `<p><strong>Clara:</strong> ${data.response}</p>`;
-                    chat.appendChild(claraMessage);
-                } else {
-                    alert('Erro ao processar a mensagem: ' + (data.error || 'Tente novamente.'));
-                }
-
-                // Rola o chat para o final
-                chat.scrollTop = chat.scrollHeight;
-            } catch (error) {
-                console.error('Erro:', error);
-                alert('Erro ao enviar a mensagem. Tente novamente.');
-            }
-        });
-    </script>
+    <script src="/static/js/chat.js"></script>
 </body>
 </html>

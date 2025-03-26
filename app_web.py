@@ -86,7 +86,7 @@ def send_proactive_message():
         "Content-Type": "application/json",
     }
     data = {
-        "model": "gryphe/mythomax-l2-13b:free",
+        "model": "meta-llama/llama-3.1-8b-instruct:free",
         "messages": messages,
         "temperature": 0.7,
         "max_tokens": 500
@@ -145,7 +145,7 @@ def index_post():
 def conversar_com_clara():
     data = request.get_json()
     mensagem = data.get('mensagem')
-    user_id = data.get('user_id', "")
+    user_id = data.get('user_id', "default_user")  # Define um user_id padrão se não for fornecido
 
     if not mensagem:
         return jsonify({'erro': 'Mensagem não fornecida'}), 400
@@ -154,13 +154,13 @@ def conversar_com_clara():
     current_time = get_current_time()
 
     # Recupera o histórico de mensagens
-    history = get_history(user_id) if user_id else []
-    history_text = "\n".join([f"{sender}: {msg}" for sender, msg in reversed(history)])
+    history = get_history(user_id)
+    history_text = "\n".join([f"{sender}: {msg}" for sender, msg in reversed(history)]) if history else "Nenhuma mensagem anterior."
 
     # Monta o prompt no formato de mensagens para o OpenRouter
     messages = [
-        {"role": "system", "content": f"{prompt_clara}\nHorário atual: {current_time} (GMT-3)"},
-        {"role": "user", "content": f"Histórico da conversa:\n{history_text}\nUsuário: {mensagem}"}
+        {"role": "system", "content": prompt_clara},
+        {"role": "user", "content": f"Horário atual: {current_time} (GMT-3)\nHistórico da conversa:\n{history_text}\nUsuário: {mensagem}"}
     ]
 
     # Enviar requisição para o OpenRouter API
@@ -169,7 +169,7 @@ def conversar_com_clara():
         "Content-Type": "application/json",
     }
     data = {
-        "model": "gryphe/mythomax-l2-13b:free",
+        "model": "meta-llama/llama-3.1-8b-instruct:free",
         "messages": messages,
         "temperature": 0.7,
         "max_tokens": 500
@@ -189,9 +189,8 @@ def conversar_com_clara():
         clara_response = resposta["choices"][0]["message"]["content"]
 
         # Salva a mensagem do usuário e a resposta da Clara no banco de dados
-        if user_id:
-            save_message(user_id, "user", mensagem)
-            save_message(user_id, "Clara", clara_response)
+        save_message(user_id, "user", mensagem)
+        save_message(user_id, "Clara", clara_response)
 
         return jsonify({'resposta': clara_response})
     except requests.Timeout:
@@ -204,30 +203,20 @@ def conversar_com_clara():
 @app.route('/send_message', methods=['POST'])
 def send_message():
     user_message = request.form['message']
-    
+    user_id = "default_user"  # Define um user_id padrão para o frontend
+
     # Salvar a mensagem do usuário no banco de dados
-    timestamp = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
-    conn = sqlite3.connect('chat_history.db')
-    c = conn.cursor()
-    c.execute("INSERT INTO messages (sender, message, timestamp) VALUES (?, ?, ?)",
-              ("Você", user_message, timestamp))
-    conn.commit()
+    save_message(user_id, "Você", user_message)
 
     # Obter o histórico das últimas 5 mensagens
-    c.execute("SELECT sender, message FROM messages ORDER BY id DESC LIMIT 5")
-    history = c.fetchall()
-    conn.close()
-
-    # Formatar o histórico para o prompt
-    history_text = "\n".join([f"{msg[0]}: {msg[1]}" for msg in history])
-    if not history_text:
-        history_text = "Nenhuma mensagem anterior."
+    history = get_history(user_id)
+    history_text = "\n".join([f"{msg[0]}: {msg[1]}" for msg in history]) if history else "Nenhuma mensagem anterior."
 
     # Preparar o prompt para o OpenRouter API
     current_time = get_current_time()
     messages = [
-        {"role": "system", "content": f"{prompt_clara}\nHorário atual: {current_time} (GMT-3)"},
-        {"role": "user", "content": f"Histórico da conversa:\n{history_text}\nUsuário: {user_message}"}
+        {"role": "system", "content": prompt_clara},
+        {"role": "user", "content": f"Horário atual: {current_time} (GMT-3)\nHistórico da conversa:\n{history_text}\nUsuário: {user_message}"}
     ]
 
     # Enviar requisição para o OpenRouter API
@@ -237,7 +226,7 @@ def send_message():
         "Content-Type": "application/json",
     }
     data = {
-        "model": "gryphe/mythomax-l2-13b:free",
+        "model": "meta-llama/llama-3.1-8b-instruct:free",
         "messages": messages,
         "temperature": 0.7,
         "max_tokens": 500
@@ -256,13 +245,7 @@ def send_message():
         clara_response = resposta["choices"][0]["message"]["content"]
 
         # Salvar a resposta da Clara no banco de dados
-        timestamp = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
-        conn = sqlite3.connect('chat_history.db')
-        c = conn.cursor()
-        c.execute("INSERT INTO messages (sender, message, timestamp) VALUES (?, ?, ?)",
-                  ("Clara", clara_response, timestamp))
-        conn.commit()
-        conn.close()
+        save_message(user_id, "Clara", clara_response)
 
         return jsonify({'response': clara_response})
     except requests.Timeout:
