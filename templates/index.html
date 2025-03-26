@@ -3,22 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conversa com Clara</title>
+    <title>Clara - WhatsApp Style</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="{{ url_for('static', filename='js/chat.js') }}" defer></script>
 </head>
 <body>
     <main>
         <header>
-            <img src="{{ url_for('static', filename='img/clara_avatar.png') }}" alt="Avatar da Clara" class="avatar">
-            <h1>Conversa com Clara</h1>
+            <div class="header-left">
+                <i class="fas fa-arrow-left"></i>
+                <img src="{{ url_for('static', filename='img/clara_avatar.png') }}" alt="Avatar da Clara" class="avatar">
+                <div class="contact-info">
+                    <h1>Clara AI</h1>
+                    <p class="status">online</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <i class="fas fa-search"></i>
+                <i class="fas fa-ellipsis-vertical"></i>
+            </div>
         </header>
+        
         <div id="chat-box" class="chat-area">
             <!-- Mensagens serão inseridas aqui via JS -->
+            <div class="date-divider">
+                <span>HOJE</span>
+            </div>
         </div>
-        <form id="mensagem-form" class="input-container" method="POST" action="#">
-            <input type="text" id="mensagem" name="mensagem" placeholder="Digite sua mensagem aqui..." required>
-            <button type="submit">Enviar</button>
+        
+        <form id="mensagem-form" class="input-container">
+            <div class="input-wrapper">
+                <button type="button" class="emoji-btn">
+                    <i class="far fa-smile"></i>
+                </button>
+                <input type="text" id="mensagem" name="mensagem" placeholder="Digite uma mensagem" required>
+                <button type="button" class="attach-btn">
+                    <i class="fas fa-paperclip"></i>
+                </button>
+            </div>
+            <button type="submit" class="send-btn">
+                <i class="fas fa-microphone"></i>
+            </button>
         </form>
     </main>
 </body>
