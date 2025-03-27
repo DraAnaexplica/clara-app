@@ -33,7 +33,8 @@ def save_message(user_id, sender, message):
 def get_history(user_id):
     conn = sqlite3.connect("chat_history.db")
     c = conn.cursor()
-    c.execute("SELECT sender, message FROM messages WHERE user_id = ? ORDER BY timestamp DESC LIMIT 5", (user_id,))
+    # Aumentado para 8 mensagens para melhor memória de curto prazo
+    c.execute("SELECT sender, message FROM messages WHERE user_id = ? ORDER BY timestamp DESC LIMIT 8", (user_id,))
     history = c.fetchall()
     conn.close()
     return history
@@ -94,3 +95,4 @@ def gerar_resposta_clara(mensagem_usuario, user_id=""):
     except Exception as e:
         print("Erro ao processar resposta da Clara:", str(e), resposta if 'resposta' in locals() else "Sem resposta")
         return "⚠️ A Clara teve um problema técnico. Tenta de novo?"
+
