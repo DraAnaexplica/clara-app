@@ -1,49 +1,190 @@
-import os # Adicionado para pegar a porta do ambiente
+import os
+import sqlite3
+import requests
+import json
+from datetime import datetime
 from flask import Flask, render_template, request, jsonify
-# Presume que openrouter_utils.py está correto como você enviou
-from openrouter_utils import gerar_resposta_clara 
+from claraprompt import prompt_clara, prompt_proactive
+import pytz
+import schedule
+import time
+import threading
 
 app = Flask(__name__)
 
-# Rota única para GET (servir HTML) e POST (receber chat)
-@app.route("/", methods=["GET", "POST"])
+# Configuração do fuso horário (GMT-3)
+tz = pytz.timezone('America/Sao_Paulo')
+
+# Configuração do banco de dados SQLite
+def init_db():
+    conn = sqlite3.connect('chat_history.db')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS messages
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  sender TEXT,
+                  message TEXT,
+                  timestamp TEXT)''')
+    conn.commit()
+    conn.close()
+
+init_db()
+
+# Função para obter o horário atual em GMT-3
+def get_current_time():
+    return datetime.now(tz).strftime('%H:%M')
+
+# Função para enviar mensagem proativa
+def send_proactive_message():
+    print("Enviando mensagem proativa...")
+    
+    # Obter o histórico da conversa
+    conn = sqlite3.connect('chat_history.db')
+    c = conn.cursor()
+    c.execute("SELECT sender, message FROM messages ORDER BY id DESC LIMIT 5")
+    history = c.fetchall()
+    conn.close()
+
+    # Formatar o histórico para o prompt
+    history_text = "\n".join([f"{msg[0]}: {msg[1]}" for msg in history])
+    if not history_text:
+        history_text = "Nenhuma mensagem anterior."
+
+    # Preparar o prompt para mensagem proativa
+    current_time = get_current_time()
+    full_prompt = f"""
+    Horário atual: {current_time} (GMT-3)
+
+    Histórico da conversa:
+    {history_text}
+
+    {prompt_proactive}
+    """
+
+    # Enviar requisição para o Gemini API
+    print("Enviando requisição pro Gemini API...")
+    headers = {
+        "Content-Type": "application/json",
+    }
+    data = {
+        "contents": [{
+            "parts": [{
+                "text": full_prompt
+            }]
+        }]
+    }
+    response = requests.post(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" + os.getenv("GEMINI_API_KEY"),
+        headers=headers,
+        json=data
+    )
+
+    if response.status_code == 200:
+        print("Resposta do Gemini API:", response.json())
+        clara_response = response.json()['candidates'][0]['content']['parts'][0]['text']
+        
+        # Salvar a mensagem proativa no banco de dados
+        timestamp = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
+        conn = sqlite3.connect('chat_history.db')
+        c = conn.cursor()
+        c.execute("INSERT INTO messages (sender, message, timestamp) VALUES (?, ?, ?)",
+                  ("Clara", clara_response, timestamp))
+        conn.commit()
+        conn.close()
+        print(f"Mensagem proativa enviada: {clara_response}")
+    else:
+        print(f"Erro ao enviar mensagem proativa: {response.status_code} - {response.text}")
+
+# Função para rodar o agendador em uma thread separada
+def run_scheduler():
+    # Agendar mensagens proativas em horários específicos (em GMT-3)
+    schedule.every().day.at("11:00").do(send_proactive_message)  # Mensagem às 11:00
+    schedule.every().day.at("11:30").do(send_proactive_message)  # Mensagem às 11:30
+
+    while True:
+        schedule.run_pending()
+        time.sleep(60)  # Verifica a cada minuto
+
+# Iniciar o agendador em uma thread separada
+scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
+scheduler_thread.start()
+
+@app.route('/')
 def index():
-    if request.method == "POST":
-        # Verifica se o corpo da requisição é JSON
-        if not request.is_json:
-             return jsonify({"error": "Requisição inválida. Corpo deve ser JSON."}), 415
-             
-        data = request.get_json()
-        if not data:
-             return jsonify({"error": "Corpo JSON vazio ou inválido."}), 400
+    # Carregar o histórico de mensagens do banco de dados
+    conn = sqlite3.connect('chat_history.db')
+    c = conn.cursor()
+    c.execute("SELECT sender, message FROM messages ORDER BY id")
+    messages = c.fetchall()
+    conn.close()
+    return render_template('index.html', messages=messages)
 
-        mensagem = data.get("mensagem")
-        user_id = data.get("user_id") # Recebe o user_id
+@app.route('/send_message', methods=['POST'])
+def send_message():
+    user_message = request.form['message']
+    
+    # Salvar a mensagem do usuário no banco de dados
+    timestamp = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
+    conn = sqlite3.connect('chat_history.db')
+    c = conn.cursor()
+    c.execute("INSERT INTO messages (sender, message, timestamp) VALUES (?, ?, ?)",
+              ("Você", user_message, timestamp))
+    conn.commit()
 
-        # Validações básicas
-        if not mensagem or not isinstance(mensagem, str) or not mensagem.strip():
-            return jsonify({"error": "O campo 'mensagem' é obrigatório e não pode ser vazio."}), 400
-        if not user_id or not isinstance(user_id, str) or not user_id.strip():
-             return jsonify({"error": "O campo 'user_id' é obrigatório."}), 400
+    # Obter o histórico das últimas 5 mensagens
+    c.execute("SELECT sender, message FROM messages ORDER BY id DESC LIMIT 5")
+    history = c.fetchall()
+    conn.close()
 
-        # Chama a função para gerar resposta (do openrouter_utils.py)
-        # Tratar erros que podem vir de gerar_resposta_clara seria ideal aqui,
-        # mas mantendo o mais próximo do seu original por enquanto.
-        try:
-             resposta = gerar_resposta_clara(mensagem, user_id=user_id)
-             return jsonify({"resposta": resposta})
-        except Exception as e:
-             # Logar o erro aqui seria importante em produção
-             print(f"Erro ao chamar gerar_resposta_clara: {e}") # Log simples para debug
-             return jsonify({"error": "Erro interno ao processar a mensagem."}), 500
+    # Formatar o histórico para o prompt
+    history_text = "\n".join([f"{msg[0]}: {msg[1]}" for msg in history])
+    if not history_text:
+        history_text = "Nenhuma mensagem anterior."
 
-    # Se for GET, renderiza o template
-    return render_template("index.html")
+    # Preparar o prompt para o Gemini API
+    current_time = get_current_time()
+    full_prompt = f"""
+    Horário atual: {current_time} (GMT-3)
 
-# Bloco para rodar localmente (Gunicorn no Render não usa isso)
-if __name__ == "__main__":
-    # Pega a porta do ambiente OU usa 5000 como padrão (bom para Render também)
-    port = int(os.environ.get("PORT", 5000)) 
-    # Roda no host 0.0.0.0 para ser acessível externamente (necessário para Render)
-    # debug=False é mais seguro para não expor o debugger, mesmo localmente às vezes
-    app.run(host="0.0.0.0", port=port, debug=False) # Debug False por padrão
+    Histórico da conversa:
+    {history_text}
+
+    {prompt_clara}
+    """
+
+    # Enviar requisição para o Gemini API
+    print("Enviando requisição pro Gemini API...")
+    headers = {
+        "Content-Type": "application/json",
+    }
+    data = {
+        "contents": [{
+            "parts": [{
+                "text": full_prompt
+            }]
+        }]
+    }
+    response = requests.post(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" + os.getenv("GEMINI_API_KEY"),
+        headers=headers,
+        json=data
+    )
+
+    if response.status_code == 200:
+        print("Resposta do Gemini API:", response.json())
+        clara_response = response.json()['candidates'][0]['content']['parts'][0]['text']
+        
+        # Salvar a resposta da Clara no banco de dados
+        timestamp = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
+        conn = sqlite3.connect('chat_history.db')
+        c = conn.cursor()
+        c.execute("INSERT INTO messages (sender, message, timestamp) VALUES (?, ?, ?)",
+                  ("Clara", clara_response, timestamp))
+        conn.commit()
+        conn.close()
+
+        return jsonify({'response': clara_response})
+    else:
+        return jsonify({'error': 'Erro ao processar a mensagem'}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
