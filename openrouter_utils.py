@@ -33,7 +33,6 @@ def save_message(user_id, sender, message):
 def get_history(user_id):
     conn = sqlite3.connect("chat_history.db")
     c = conn.cursor()
-    # Aumentado para 8 mensagens para melhor memória de curto prazo
     c.execute("SELECT sender, message FROM messages WHERE user_id = ? ORDER BY timestamp DESC LIMIT 8", (user_id,))
     history = c.fetchall()
     conn.close()
@@ -49,7 +48,9 @@ def gerar_resposta_clara(mensagem_usuario, user_id=""):
         save_message(user_id, "Usuário", mensagem_usuario)
 
     fuso_horario = pytz.timezone("America/Sao_Paulo")
-    horario_atual = datetime.now(fuso_horario).strftime("%H:%M")
+    agora = datetime.now(fuso_horario)
+    hora = agora.strftime("%H:%M")
+    data = agora.strftime("%A, %d de %B de %Y")
 
     mensagens_formatadas = [
         { "role": "system", "content": prompt_clara }
@@ -65,7 +66,7 @@ def gerar_resposta_clara(mensagem_usuario, user_id=""):
 
     mensagens_formatadas.append({
         "role": "user",
-        "content": f"{mensagem_usuario}\n(Horário atual: {horario_atual})"
+        "content": f"{mensagem_usuario}\n(Horário atual: {hora})\n(Data atual: {data})"
     })
 
     url = "https://openrouter.ai/api/v1/chat/completions"
