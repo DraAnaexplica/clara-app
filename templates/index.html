@@ -2,44 +2,75 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <!-- Viewport como no seu original, adicionado viewport-fit=cover -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"> 
     <title>Clara - WhatsApp Style</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="{{ url_for('static', filename='js/chat.js') }}" defer></script>
+    <!-- Presume que seu chat.js original funciona com POST para "/" -->
+    <script src="{{ url_for('static', filename='js/chat.js') }}" defer></script> 
 </head>
 <body>
     <div class="app-container">
         <header>
             <div class="header-left">
-                <i class="fas fa-arrow-left"></i>
-                <img src="{{ url_for('static', filename='img/clara_avatar.png') }}" alt="Avatar da Clara" class="avatar">
+                <!-- Ícone de voltar como botão -->
+                <button class="back-btn" type="button" aria-label="Voltar" title="Voltar">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <!-- Avatar com fallback -->
+                <img src="{{ url_for('static', filename='img/clara_avatar.png') }}" 
+                     alt="Avatar da Clara" 
+                     class="avatar" 
+                     onerror="this.style.display='none'; document.querySelector('.avatar-fallback').style.display='flex';" 
+                     />
+                <div class="avatar-fallback" style="display: none; width: 40px; height: 40px; border-radius: 50%; background-color: grey; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; flex-shrink: 0;">C</div> 
+
                 <div class="contact-info">
                     <h1>Clara AI</h1>
                     <p class="status">online</p>
                 </div>
             </div>
             <div class="header-right">
-                <i class="fas fa-search"></i>
-                <i class="fas fa-ellipsis-vertical"></i>
+                <!-- Ícones do header como botões -->
+                <button class="search-btn" type="button" aria-label="Pesquisar" title="Pesquisar">
+                    <i class="fas fa-search"></i>
+                </button>
+                <button class="menu-btn" type="button" aria-label="Menu" title="Menu">
+                    <i class="fas fa-ellipsis-vertical"></i>
+                </button>
             </div>
         </header>
         
-        <div id="chat-box" class="chat-area">
+        <div id="chat-box" class="chat-area" aria-live="polite">
             <!-- Mensagens serão inseridas aqui via JS -->
         </div>
         
-        <form id="mensagem-form" class="input-container">
+        <!-- Formulário de input -->
+        <form id="mensagem-form" class="input-container" novalidate> 
             <div class="input-wrapper">
-                <button type="button" class="emoji-btn">
+                 <!-- Botão Emoji -->
+                <button type="button" class="emoji-btn" aria-label="Inserir emoji" title="Inserir emoji">
                     <i class="far fa-smile"></i>
                 </button>
-                <input type="text" id="mensagem" name="mensagem" placeholder="Digite uma mensagem" required>
-                <button type="button" class="attach-btn">
+                <!-- *** MUDANÇA PRINCIPAL: input para textarea *** -->
+                <textarea id="mensagem" 
+                          name="mensagem" 
+                          placeholder="Digite uma mensagem" 
+                          rows="1" 
+                          aria-label="Caixa de texto da mensagem"></textarea> 
+                <!-- Botão Anexo -->
+                <button type="button" class="attach-btn" aria-label="Anexar arquivo" title="Anexar arquivo">
                     <i class="fas fa-paperclip"></i>
                 </button>
+                <!-- Botão Câmera (Placeholder) -->
+                <button type="button" class="camera-btn" aria-label="Tirar foto" title="Tirar foto">
+                    <i class="fas fa-camera"></i>
+                </button>
             </div>
-            <button type="submit" class="send-btn">
+            <!-- Botão de Enviar -->
+            <button type="submit" class="send-btn" aria-label="Enviar mensagem" title="Enviar mensagem">
+                 <!-- Ícone inicial, JS original deve controlar o ícone/cor? -->
                 <i class="fas fa-microphone"></i>
             </button>
         </form>
