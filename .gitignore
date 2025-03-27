@@ -1,3 +1,28 @@
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Banco de dados SQLite
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+
+# Arquivos de configuração sensíveis
 .env
+
+# IDE/Editor specific files
+.idea/
+.vscode/
+*.swp
+*~

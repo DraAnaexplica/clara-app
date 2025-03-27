@@ -2,45 +2,79 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <!-- Viewport para responsividade e controle de zoom -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Clara - WhatsApp Style</title>
+    <title>Clara AI</title>
+    <!-- Favicon (adicione seu próprio favicon.ico na pasta static) -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <!-- CSS principal -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- JavaScript do Chat (defer garante que execute após o HTML) -->
     <script src="{{ url_for('static', filename='js/chat.js') }}" defer></script>
+    <!-- Apple Touch Icon (opcional) -->
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+    <!-- Meta tag para cor da barra de status em mobile (opcional) -->
+    <meta name="theme-color" content="#075E54"> <!-- Cor do Header -->
 </head>
 <body>
+    <!-- Container principal da aplicação -->
     <div class="app-container">
+        <!-- Cabeçalho fixo -->
         <header>
             <div class="header-left">
-                <i class="fas fa-arrow-left"></i>
-                <img src="{{ url_for('static', filename='img/clara_avatar.png') }}" alt="Avatar da Clara" class="avatar">
+                <button class="back-btn" aria-label="Voltar" title="Voltar">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <!-- Adicione a imagem clara_avatar.png na pasta static/img/ -->
+                <img src="{{ url_for('static', filename='img/clara_avatar.png') }}" alt="Avatar da Clara" class="avatar" onerror="this.style.display='none'; document.querySelector('.avatar-fallback').style.display='flex';">
+                <!-- Fallback caso a imagem não carregue -->
+                <div class="avatar-fallback" style="display: none; width: 40px; height: 40px; border-radius: 50%; background-color: var(--whatsapp-dark-gray); align-items: center; justify-content: center; color: white; font-size: 20px; flex-shrink: 0;">C</div> 
+                
                 <div class="contact-info">
                     <h1>Clara AI</h1>
-                    <p class="status">online</p>
+                    <!-- Status poderia ser atualizado via JS se necessário -->
+                    <p class="status">online</p> 
                 </div>
             </div>
             <div class="header-right">
-                <i class="fas fa-search"></i>
-                <i class="fas fa-ellipsis-vertical"></i>
+                <button class="search-btn" aria-label="Pesquisar" title="Pesquisar">
+                    <i class="fas fa-search"></i>
+                </button>
+                <button class="menu-btn" aria-label="Menu" title="Menu">
+                    <i class="fas fa-ellipsis-vertical"></i>
+                </button>
             </div>
         </header>
         
-        <div id="chat-box" class="chat-area">
-            <!-- Mensagens serão inseridas aqui via JS -->
+        <!-- Área onde as mensagens são exibidas -->
+        <div id="chat-box" class="chat-area" aria-live="polite" aria-atomic="false">
+            <!-- Mensagens serão inseridas aqui dinamicamente via JS -->
         </div>
         
-        <form id="mensagem-form" class="input-container">
+        <!-- Formulário para entrada de mensagem -->
+        <form id="mensagem-form" class="input-container" novalidate> <!-- novalidate previne validação HTML5 padrão -->
             <div class="input-wrapper">
-                <button type="button" class="emoji-btn">
+                <button type="button" class="emoji-btn" aria-label="Inserir emoji" title="Inserir emoji">
                     <i class="far fa-smile"></i>
                 </button>
-                <input type="text" id="mensagem" name="mensagem" placeholder="Digite uma mensagem" required>
-                <button type="button" class="attach-btn">
+                <!-- Input de texto principal -->
+                <!-- Usar textarea permite múltiplas linhas mais facilmente -->
+                <textarea id="mensagem" name="mensagem" placeholder="Digite uma mensagem" rows="1" aria-label="Caixa de texto da mensagem"></textarea> 
+                
+                <!-- Botão de anexo (funcionalidade não implementada) -->
+                <button type="button" class="attach-btn" aria-label="Anexar arquivo" title="Anexar arquivo">
                     <i class="fas fa-paperclip"></i>
                 </button>
+                 <!-- Botão de câmera (funcionalidade não implementada) -->
+                <button type="button" class="camera-btn" aria-label="Tirar foto" title="Tirar foto">
+                    <i class="fas fa-camera"></i>
+                </button>
             </div>
-            <button type="submit" class="send-btn">
-                <i class="fas fa-microphone"></i>
+            <!-- Botão de enviar / microfone (troca dinâmica via JS) -->
+            <button type="submit" class="send-btn" aria-label="Enviar mensagem" title="Enviar mensagem"> <!-- Label inicial pode ser enviar -->
+                <i class="fas fa-microphone"></i> <!-- Ícone inicial -->
             </button>
         </form>
     </div>
