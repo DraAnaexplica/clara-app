@@ -2,83 +2,45 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <!-- Viewport para responsividade, controle de zoom e safe areas -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Clara AI</title>
-    <!-- Favicon (coloque favicon.ico em static/) -->
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-    <!-- CSS principal -->
+    <title>Clara - WhatsApp Style</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <!-- Font Awesome para ícones -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <!-- JavaScript do Chat (defer executa após HTML) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="{{ url_for('static', filename='js/chat.js') }}" defer></script>
-    <!-- Apple Touch Icon (opcional, coloque em static/img/) -->
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
-    <!-- Cor da barra de status mobile (opcional) -->
-    <meta name="theme-color" content="#075E54"> <!-- Cor do Header Escuro -->
 </head>
 <body>
-    <!-- Container principal -->
     <div class="app-container">
-        <!-- Cabeçalho -->
         <header>
             <div class="header-left">
-                <button class="back-btn" aria-label="Voltar" title="Voltar">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-                <!-- Avatar com fallback -->
-                <img src="{{ url_for('static', filename='img/clara_avatar.png') }}" 
-                     alt="Avatar da Clara" 
-                     class="avatar" 
-                     onerror="this.style.display='none'; document.querySelector('.avatar-fallback').style.display='flex';"
-                     />
-                <div class="avatar-fallback" style="display: none;">C</div> 
-                
+                <i class="fas fa-arrow-left"></i>
+                <img src="{{ url_for('static', filename='img/clara_avatar.png') }}" alt="Avatar da Clara" class="avatar">
                 <div class="contact-info">
                     <h1>Clara AI</h1>
-                    <p class="status">online</p> 
+                    <p class="status">online</p>
                 </div>
             </div>
             <div class="header-right">
-                <button class="search-btn" aria-label="Pesquisar" title="Pesquisar">
-                    <i class="fas fa-search"></i>
-                </button>
-                <button class="menu-btn" aria-label="Menu" title="Menu">
-                    <i class="fas fa-ellipsis-vertical"></i>
-                </button>
+                <i class="fas fa-search"></i>
+                <i class="fas fa-ellipsis-vertical"></i>
             </div>
         </header>
         
-        <!-- Área de mensagens -->
-        <div id="chat-box" class="chat-area" aria-live="polite" aria-atomic="false">
-            <!-- Mensagens inseridas via JS -->
+        <div id="chat-box" class="chat-area">
+            <!-- Mensagens serão inseridas aqui via JS -->
         </div>
         
-        <!-- Formulário de input -->
-        <form id="mensagem-form" class="input-container" novalidate>
+        <form id="mensagem-form" class="input-container">
             <div class="input-wrapper">
-                <button type="button" class="emoji-btn" aria-label="Inserir emoji" title="Inserir emoji">
+                <button type="button" class="emoji-btn">
                     <i class="far fa-smile"></i>
                 </button>
-                <!-- *** MUDANÇA PRINCIPAL: input para textarea *** -->
-                <textarea id="mensagem" 
-                          name="mensagem" 
-                          placeholder="Digite uma mensagem" 
-                          rows="1" 
-                          aria-label="Caixa de texto da mensagem"></textarea> 
-                
-                <button type="button" class="attach-btn" aria-label="Anexar arquivo" title="Anexar arquivo">
+                <input type="text" id="mensagem" name="mensagem" placeholder="Digite uma mensagem" required>
+                <button type="button" class="attach-btn">
                     <i class="fas fa-paperclip"></i>
                 </button>
-                 <button type="button" class="camera-btn" aria-label="Tirar foto" title="Tirar foto">
-                    <i class="fas fa-camera"></i>
-                </button>
             </div>
-            <!-- Botão de enviar/microfone -->
-            <button type="submit" class="send-btn" aria-label="Enviar mensagem" title="Enviar mensagem">
-                <!-- Ícone inicial, JS vai controlar -->
-                <i class="fas fa-microphone"></i> 
+            <button type="submit" class="send-btn">
+                <i class="fas fa-microphone"></i>
             </button>
         </form>
     </div>
