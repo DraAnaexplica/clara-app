@@ -13,7 +13,9 @@ prompt_module = importlib.import_module("claraprompt")
 prompt_clara = prompt_module.prompt_clara
 
 load_dotenv()
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "").replace('\n', '').replace('\r', '').strip()
+
+
 print("🔑 OPENROUTER_API_KEY:", OPENROUTER_API_KEY)
 
 
