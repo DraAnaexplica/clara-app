@@ -5,7 +5,12 @@ from claraprompt import prompt_clara
 from datetime import datetime
 import pytz
 
+from dotenv import load_dotenv
+
+load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+print("🔑 OPENROUTER_API_KEY:", OPENROUTER_API_KEY)  # <- agora sim, depois de definir
+
 
 def init_db():
     conn = sqlite3.connect("chat_history.db")
