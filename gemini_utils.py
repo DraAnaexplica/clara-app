@@ -80,7 +80,9 @@ def gerar_resposta_clara_gemini(mensagem_usuario, user_id=""):
     try:
         print("📡 Enviando requisição pro Gemini...")
         response = requests.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/tunedModels/clara-minha-namorada-9nx5d7mvxxqy:generateContent?key={GEMINI_API_KEY}",
+          "https://generativelanguage.googleapis.com/v1beta/models/tunedModels/clara-minha-namorada-9nx5d7mvxxqy:generateContent?key={GEMINI_API_KEY}"
+
+
             headers=headers,
             json=data,
             timeout=10
