@@ -76,32 +76,15 @@ def gerar_resposta_clara_gemini(mensagem_usuario, user_id=""):
         }]
     }
 
-    try:
-        print("📱 Enviando requisição pro Gemini...")
-        response = requests.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}",
-            headers=headers,
-            json=data,
-            timeout=10
-        )
+try:
+    save_message(user_id, "Clara", reply)
+    return validate(reply)  # 👈 Dentro do try!
 
-        if response.status_code == 200:
-            resultado = response.json()
-            reply = resultado["candidates"][0]["content"]["parts"][0]["text"]
+except requests.Timeout:
+    return "● A Clara demorou demais pra responder. Tenta de novo?"
 
-            if user_id:
-                save_message(user_id, "Clara", reply)
+except Exception as e:
+    print("Error inesperado:", str(e))
+    return "▲ A Clara teve um problema técnico. Tenta de novo?"
 
-return validate(reply)  # 👈 Aplica o validador
-        else:
-            print(f"⚠️ Erro {response.status_code}: {response.text}")
-            return "⚠️ Clara não conseguiu responder agora. Tenta de novo?"
-    except requests.Timeout:
-        return "⏱️ A Clara demorou demais pra responder. Tenta de novo?"
-    except Exception as e:
-        print("Erro inesperado:", str(e))
-        return "⚠️ A Clara teve um problema técnico. Tenta de novo?"
-
-
-
-
+# Nota: Removi o 'else' pois não se aplica a um bloco try/except
