@@ -1,6 +1,7 @@
 import os
 import requests
 import sqlite3
+from core.validation.response_validator import validate  # 👈 Novo import
 from claraprompt import prompt_clara
 from datetime import datetime
 import pytz
@@ -91,7 +92,7 @@ def gerar_resposta_clara_gemini(mensagem_usuario, user_id=""):
             if user_id:
                 save_message(user_id, "Clara", reply)
 
-            return reply
+return validate(reply)  # 👈 Aplica o validador
         else:
             print(f"⚠️ Erro {response.status_code}: {response.text}")
             return "⚠️ Clara não conseguiu responder agora. Tenta de novo?"
