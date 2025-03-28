@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from openrouter_utils import gerar_resposta_clara
+from gemini_utils import gerar_resposta_clara_gemini
 
 app = Flask(__name__)
 
@@ -7,11 +7,12 @@ app = Flask(__name__)
 def conversar_com_clara():
     data = request.get_json()
     mensagem = data.get('mensagem')
+    user_id = data.get('user_id', '')  # <- garante compatibilidade com memória
 
     if not mensagem:
         return jsonify({'erro': 'Mensagem não fornecida'}), 400
 
-    resposta = gerar_resposta_clara(mensagem)
+    resposta = gerar_resposta_clara_gemini(mensagem, user_id=user_id)
     return jsonify({'resposta': resposta})
 
 @app.route('/')
