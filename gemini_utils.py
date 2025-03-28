@@ -78,11 +78,9 @@ def gerar_resposta_clara_gemini(mensagem_usuario, user_id=""):
     }
 
     try:
-        print("📡 Enviando requisição pro Gemini...")
+        print("📱 Enviando requisição pro Gemini...")
         response = requests.post(
-          "https://generativelanguage.googleapis.com/v1beta/models/tunedModels/clara-minha-namorada-9nx5d7mvxxqy:generateContent?key={GEMINI_API_KEY}"
-
-
+            f"https://generativelanguage.googleapis.com/v1beta/models/tunedModels/clara-minha-namorada-9nx5d7mvxxqy:generateContent?key={GEMINI_API_KEY}",
             headers=headers,
             json=data,
             timeout=10
@@ -104,4 +102,5 @@ def gerar_resposta_clara_gemini(mensagem_usuario, user_id=""):
     except Exception as e:
         print("Erro inesperado:", str(e))
         return "⚠️ A Clara teve um problema técnico. Tenta de novo?"
+
 
