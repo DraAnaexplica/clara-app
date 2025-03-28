@@ -5,6 +5,7 @@ from claraprompt import prompt_clara
 from datetime import datetime
 import pytz
 from dotenv import load_dotenv
+
 load_dotenv()
 
 # TESTE: imprimir a chave carregada
@@ -102,5 +103,6 @@ def gerar_resposta_clara_gemini(mensagem_usuario, user_id=""):
     except Exception as e:
         print("Erro inesperado:", str(e))
         return "⚠️ A Clara teve um problema técnico. Tenta de novo?"
+
 
 
