@@ -1,15 +1,21 @@
 import os
 import requests
 import sqlite3
-from claraprompt import prompt_clara
+import importlib
 from datetime import datetime
 import pytz
 from dotenv import load_dotenv
+from claraprompt import prompt_clara
+print("✅ Prompt carregado (primeiras linhas):")
+print(prompt_clara[:500])
 
-# Carrega variáveis de ambiente (localmente e no Render)
+prompt_module = importlib.import_module("claraprompt")
+prompt_clara = prompt_module.prompt_clara
+
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-print("🔑 OPENROUTER_API_KEY:", OPENROUTER_API_KEY)  # Debug para Render
+print("🔑 OPENROUTER_API_KEY:", OPENROUTER_API_KEY)
+
 
 def init_db():
     conn = sqlite3.connect("chat_history.db")
