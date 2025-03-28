@@ -4,13 +4,12 @@ import sqlite3
 from claraprompt import prompt_clara
 from datetime import datetime
 import pytz
-
 from dotenv import load_dotenv
 
+# Carrega variáveis de ambiente (localmente e no Render)
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-print("🔑 OPENROUTER_API_KEY:", OPENROUTER_API_KEY)  # <- agora sim, depois de definir
-
+print("🔑 OPENROUTER_API_KEY:", OPENROUTER_API_KEY)  # Debug para Render
 
 def init_db():
     conn = sqlite3.connect("chat_history.db")
@@ -87,15 +86,19 @@ def gerar_resposta_clara(mensagem_usuario, user_id=""):
         print("Enviando requisição pro OpenRouter...")
         response = requests.post(url, headers=headers, json=data, timeout=10)
         resposta = response.json()
+        print("📨 Resposta da API completa:", resposta)  # 👈 Aqui pegamos o retorno bruto da IA
+
         reply = resposta["choices"][0]["message"]["content"]
 
         if user_id:
             save_message(user_id, "Clara", reply)
 
         return reply
+
     except requests.Timeout:
-        print("Erro: Timeout na requisição pro OpenRouter")
+        print("⏱️ Timeout na requisição pro OpenRouter")
         return "⏱️ A Clara demorou demais pra responder. Tenta de novo?"
+
     except Exception as e:
-        print("Erro ao processar resposta da Clara:", str(e), resposta if 'resposta' in locals() else "Sem resposta")
+        print("❌ Erro ao processar resposta da Clara:", str(e), resposta if 'resposta' in locals() else "Sem resposta")
         return "⚠️ A Clara teve um problema técnico. Tenta de novo?"
