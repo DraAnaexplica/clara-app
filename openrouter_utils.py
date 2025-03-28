@@ -74,10 +74,9 @@ def gerar_resposta_clara(mensagem_usuario, user_id=""):
     }
 
     data = {
-    "model": "nous-hermes-2-mixtral",
-    "messages": mensagens_formatadas
-}
-
+        "model": "deepseek/deepseek-chat-v3-0324:free",
+        "messages": mensagens_formatadas
+    }
 
     try:
         print("Enviando requisição pro OpenRouter...")

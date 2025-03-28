@@ -5,10 +5,8 @@ from claraprompt import prompt_clara
 from datetime import datetime
 import pytz
 from dotenv import load_dotenv
-
 load_dotenv()
 
-# TESTE: imprimir a chave carregada
 print("🔑 GEMINI_API_KEY carregada:", os.getenv("GEMINI_API_KEY"))
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -56,7 +54,6 @@ def gerar_resposta_clara_gemini(mensagem_usuario, user_id=""):
     fuso_horario = pytz.timezone("America/Sao_Paulo")
     horario_atual = datetime.now(fuso_horario).strftime("%H:%M")
 
-    # Recuperar histórico
     historico = get_history(user_id) if user_id else []
     history_text = "\n".join([f"{sender}: {msg}" for sender, msg in reversed(historico)])
     if not history_text:
@@ -81,7 +78,7 @@ def gerar_resposta_clara_gemini(mensagem_usuario, user_id=""):
     try:
         print("📱 Enviando requisição pro Gemini...")
         response = requests.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/tunedModels/clara-minha-namorada-9nx5d7mvxxqy:generateContent?key={GEMINI_API_KEY}",
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}",
             headers=headers,
             json=data,
             timeout=10
@@ -103,6 +100,7 @@ def gerar_resposta_clara_gemini(mensagem_usuario, user_id=""):
     except Exception as e:
         print("Erro inesperado:", str(e))
         return "⚠️ A Clara teve um problema técnico. Tenta de novo?"
+
 
 
 

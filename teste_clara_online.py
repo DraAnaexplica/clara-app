@@ -7,9 +7,6 @@ data = {
 }
 
 response = requests.post(url, json=data)
+
 print("Status:", response.status_code)
 print("Resposta da Clara:", response.json())
-
-
-
-
