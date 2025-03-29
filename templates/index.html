@@ -1,44 +1,36 @@
 <!DOCTYPE html>
-<html lang="pt-BR">  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Clara - WhatsApp Style</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="{{ url_for('static', filename='js/chat.js') }}" defer></script>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clara</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
 </head>
 <body>
-    <div class="app-container">
-        <header>
-            <div class="header-left">
-                <button class="back-btn" aria-label="Voltar">  <i class="fas fa-arrow-left"></i>
-                </button>
-                <img src="{{ url_for('static', filename='img/clara_avatar.png') }}" alt="Avatar da Clara" class="avatar">
-                <div class="contact-info">
-                    <h1>Clara </h1>
-                    <p class="status">online</p>
-                </div>
-            </div>
-            <div class="header-right">
-                <button class="search-btn" aria-label="Pesquisar">  <i class="fas fa-search"></i>
-                </button>
-                <button class="more-btn" aria-label="Mais opções">  <i class="fas fa-ellipsis-vertical"></i>
-                </button>
-            </div>
-        </header>
-        
-        <main id="chat-box" class="chat-area">  </main>
-        
-        <form id="mensagem-form" class="input-container">
-            <div class="input-wrapper">
-                <button type="button" class="emoji-btn" aria-label="Escolher emoji">  <i class="far fa-smile"></i>
-                </button>
-                <input type="text" id="mensagem" name="mensagem" placeholder="Digite uma mensagem" required aria-label="Digite sua mensagem">  <button type="button" class="attach-btn" aria-label="Anexar arquivo">  <i class="fas fa-paperclip"></i>
-                </button>
-            </div>
-            <button type="submit" class="send-btn" aria-label="Enviar mensagem">  <i class="fas fa-microphone"></i>
-            </button>
-        </form>
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="profile-picture">
+        <img id="avatar" src="/static/img/clara_avatar.png" alt="Clara" />
+      </div>
+      <div class="profile-info">
+        <h2>Clara</h2>
+        <p class="status">online</p>
+      </div>
     </div>
+    <div id="chat-messages" class="chat-messages"></div>
+    <form id="chat-form" class="chat-form">
+      <button type="button" class="emoji-btn">😊</button>
+      <input type="text" id="user-input" placeholder="Digite uma mensagem..." autocomplete="off"/>
+      <button type="submit">Enviar</button>
+    </form>
+  </div>
+
+  <!-- Modal para ampliar imagem -->
+  <div id="image-modal" class="modal">
+    <span class="close">&times;</span>
+    <img class="modal-content" id="modal-image" />
+  </div>
+
+  <script src="/static/js/chat.js"></script>
 </body>
 </html>
