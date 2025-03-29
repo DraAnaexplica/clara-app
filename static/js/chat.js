@@ -19,8 +19,8 @@ function displayMessage(message) {
     const msgDiv = document.createElement("div");
     
     msgDiv.className = `message ${message.from}`;
-   msgDiv.innerHTML = `
-    <div class="message-content"><span class="math-inline">\{message\.text\}</div\>
+    msgDiv.innerHTML = `
+        <div class="message-content">${message.text}</div>
         <span class="timestamp">${formatTime()}</span>
         ${message.from === "me" ? '<span class="checkmarks"><i class="fas fa-check-double"></i></span>' : ''}  `;
     

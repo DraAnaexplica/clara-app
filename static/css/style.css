@@ -165,31 +165,20 @@ header i {
 }
 
 /* Checks de Confirmação */
-/* Estilos para os Checks de Confirmação */
 .checkmarks {
     position: absolute;
-    bottom: 4px; /* Ajuste vertical */
-    right: 8px; /* Ajuste horizontal */
-    font-size: 0; /* Esconde o tamanho da fonte */
+    bottom: 2px;
+    right: 8px; /* Ajuste no posicionamento */
+    font-size: 12px;
+    color: #999; /* Cinza para "enviado" */
 }
 
-.check {
-    display: inline-block;
-    width: 5px; /* Largura dos checks */
-    height: 8px; /* Altura dos checks */
-    border-right: 2px solid #999; /* Cor padrão */
-    border-top: 2px solid #999;
-    transform: rotate(45deg);
-    margin-left: -2px; /* Espaçamento entre os checks */
-    margin-top: -1px;
-}
-
-.check.read {
-    border-color: var(--whatsapp-blue); /* Cor azul para lido */
+.checkmarks.read {
+    color: var(--whatsapp-blue); /* Azul para "lido" */
 }
 
 .checkmarks i {
-    margin-left: 0; /* Espaço entre os checks */
+    margin-left: 2px; /* Espaço entre os checks */
 }
 
 /* Área de Input - Fixa na parte inferior */
