@@ -22,8 +22,7 @@ function displayMessage(message) {
     msgDiv.innerHTML = `
         <div class="message-content">${message.text}</div>
         <span class="timestamp">${formatTime()}</span>
-        ${message.from === "me" ? '<span class="checkmarks"><i class="fas fa-check"></i></span>' : ''}
-    `;
+        ${message.from === "me" ? '<span class="checkmarks"><i class="fas fa-check-double"></i></span>' : ''}  `;
     
     chatBox.appendChild(msgDiv);
     scrollToBottom();
@@ -33,8 +32,7 @@ function displayMessage(message) {
         setTimeout(() => {
             const checkmarks = msgDiv.querySelector('.checkmarks');
             if (checkmarks) {
-                checkmarks.innerHTML = '<i class="fas fa-check"></i><i class="fas fa-check"></i>';
-                checkmarks.classList.add('read');
+                checkmarks.innerHTML = '<i class="fas fa-check-double"></i><i class="fas fa-check-double"></i>';  checkmarks.classList.add('read');
             }
         }, 2000); // 2 segundos de delay
     }
@@ -43,9 +41,7 @@ function displayMessage(message) {
 // Função para rolar para o final do chat
 function scrollToBottom() {
     const chatBox = document.getElementById("chat-box");
-    setTimeout(() => {
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }, 50);
+    chatBox.scrollTop = chatBox.scrollHeight;  // Removido o setTimeout (mais eficiente)
 }
 
 // Função pra enviar mensagem
@@ -63,6 +59,7 @@ function sendMessage(event) {
     
     messageInput.value = "";
     updateSendButton();
+    messageInput.focus();  // Mantém o foco no input após enviar
     
     const userId = getUserId();
     
@@ -79,10 +76,10 @@ function sendMessage(event) {
         });
     })
     .catch(error => {
-        console.error("Erro:", error);
+        console.error("Erro ao receber resposta:", error);  // Mensagem de erro mais específica
         displayMessage({ 
             from: "her", 
-            text: "⚠️ Ocorreu um erro. Por favor, tente novamente."
+            text: "⚠️ Ocorreu um erro ao receber a resposta. Por favor, tente novamente."
         });
     });
 }
@@ -134,7 +131,7 @@ function init() {
         window.visualViewport.addEventListener('resize', handleKeyboard);
     }
     
-    window.addEventListener('resize', scrollToBottom);
+    window.addEventListener('resize', adjustChatHeight);  // Usando adjustChatHeight diretamente
     
     document.getElementById("mensagem").focus();
     
