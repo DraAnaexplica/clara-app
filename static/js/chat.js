@@ -22,10 +22,22 @@ function displayMessage(message) {
     msgDiv.innerHTML = `
         <div class="message-content">${message.text}</div>
         <span class="timestamp">${formatTime()}</span>
+        ${message.from === "me" ? '<span class="checkmarks"><i class="fas fa-check"></i></span>' : ''}
     `;
     
     chatBox.appendChild(msgDiv);
     scrollToBottom();
+    
+    // Simula a confirmação de leitura após 2 segundos
+    if (message.from === "me") {
+        setTimeout(() => {
+            const checkmarks = msgDiv.querySelector('.checkmarks');
+            if (checkmarks) {
+                checkmarks.innerHTML = '<i class="fas fa-check"></i><i class="fas fa-check"></i>';
+                checkmarks.classList.add('read');
+            }
+        }, 2000); // 2 segundos de delay para simular a leitura
+    }
 }
 
 // Função para rolar para o final do chat

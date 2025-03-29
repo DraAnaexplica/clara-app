@@ -153,6 +153,23 @@ header i {
     color: rgba(255, 255, 255, 0.8);
 }
 
+/* Checks de Confirmação */
+.checkmarks {
+    position: absolute;
+    bottom: 2px;
+    right: 5px;
+    font-size: 12px;
+    color: #999; /* Cor cinza para "enviado" */
+}
+
+.checkmarks.read {
+    color: var(--whatsapp-blue); /* Azul do WhatsApp para "lido" */
+}
+
+.checkmarks i {
+    margin-left: 2px; /* Pequeno espaçamento entre os checks */
+}
+
 /* Área de Input - Fixa na parte inferior */
 .input-container {
     background-color: var(--whatsapp-gray);
