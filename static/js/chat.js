@@ -154,3 +154,22 @@ function adjustChatHeight() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+// Emoji picker logic
+document.addEventListener("DOMContentLoaded", () => {
+    const emojiPicker = document.getElementById("emoji-picker");
+    const emojiButton = document.getElementById("emoji-button");
+    const userInput = document.getElementById("user-input");
+
+    if (emojiButton && emojiPicker) {
+        emojiButton.addEventListener("click", () => {
+            emojiPicker.style.display = emojiPicker.style.display === "none" ? "block" : "none";
+        });
+
+        emojiPicker.querySelectorAll(".emoji").forEach((emoji) => {
+            emoji.addEventListener("click", () => {
+                userInput.value += emoji.textContent;
+                emojiPicker.style.display = "none";
+            });
+        });
+    }
+});
