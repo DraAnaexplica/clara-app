@@ -171,6 +171,9 @@ header i {
     right: 8px; /* Ajuste no posicionamento */
     font-size: 12px;
     color: #999; /* Cinza para "enviado" */
+    display: flex;       /* Adicionado para alinhar os checks */
+    align-items: center; /* Alinha verticalmente */
+    gap: 2px;           /* Espaçamento entre os checks */
 }
 
 .checkmarks.read {
@@ -178,7 +181,7 @@ header i {
 }
 
 .checkmarks i {
-    margin-left: 2px; /* Espaço entre os checks */
+    margin-left: 0; /* Espaço entre os checks */
 }
 
 /* Área de Input - Fixa na parte inferior */
