@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
-<head>
+<html lang="pt-BR">  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Clara - WhatsApp Style</title>
@@ -12,35 +11,32 @@
     <div class="app-container">
         <header>
             <div class="header-left">
-                <i class="fas fa-arrow-left"></i>
+                <button class="back-btn" aria-label="Voltar">  <i class="fas fa-arrow-left"></i>
+                </button>
                 <img src="{{ url_for('static', filename='img/clara_avatar.png') }}" alt="Avatar da Clara" class="avatar">
                 <div class="contact-info">
-                    <h1>Clara AI</h1>
+                    <h1>Clara </h1>
                     <p class="status">online</p>
                 </div>
             </div>
             <div class="header-right">
-                <i class="fas fa-search"></i>
-                <i class="fas fa-ellipsis-vertical"></i>
+                <button class="search-btn" aria-label="Pesquisar">  <i class="fas fa-search"></i>
+                </button>
+                <button class="more-btn" aria-label="Mais opções">  <i class="fas fa-ellipsis-vertical"></i>
+                </button>
             </div>
         </header>
         
-        <div id="chat-box" class="chat-area">
-            <!-- Mensagens serão inseridas aqui via JS -->
-        </div>
+        <main id="chat-box" class="chat-area">  </main>
         
         <form id="mensagem-form" class="input-container">
             <div class="input-wrapper">
-                <button type="button" class="emoji-btn">
-                    <i class="far fa-smile"></i>
+                <button type="button" class="emoji-btn" aria-label="Escolher emoji">  <i class="far fa-smile"></i>
                 </button>
-                <input type="text" id="mensagem" name="mensagem" placeholder="Digite uma mensagem" required>
-                <button type="button" class="attach-btn">
-                    <i class="fas fa-paperclip"></i>
+                <input type="text" id="mensagem" name="mensagem" placeholder="Digite uma mensagem" required aria-label="Digite sua mensagem">  <button type="button" class="attach-btn" aria-label="Anexar arquivo">  <i class="fas fa-paperclip"></i>
                 </button>
             </div>
-            <button type="submit" class="send-btn">
-                <i class="fas fa-microphone"></i>
+            <button type="submit" class="send-btn" aria-label="Enviar mensagem">  <i class="fas fa-microphone"></i>
             </button>
         </form>
     </div>

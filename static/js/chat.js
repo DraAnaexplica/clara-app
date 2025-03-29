@@ -22,19 +22,26 @@ function displayMessage(message) {
     msgDiv.innerHTML = `
         <div class="message-content">${message.text}</div>
         <span class="timestamp">${formatTime()}</span>
-    `;
+        ${message.from === "me" ? '<span class="checkmarks"><i class="fas fa-check-double"></i></span>' : ''}  `;
     
     chatBox.appendChild(msgDiv);
     scrollToBottom();
+    
+    // Simula a confirmação de leitura após 2 segundos
+    if (message.from === "me") {
+        setTimeout(() => {
+            const checkmarks = msgDiv.querySelector('.checkmarks');
+            if (checkmarks) {
+                checkmarks.innerHTML = '<i class="fas fa-check-double"></i><i class="fas fa-check-double"></i>';  checkmarks.classList.add('read');
+            }
+        }, 2000); // 2 segundos de delay
+    }
 }
 
 // Função para rolar para o final do chat
 function scrollToBottom() {
     const chatBox = document.getElementById("chat-box");
-    // Usamos setTimeout para garantir que o DOM foi atualizado
-    setTimeout(() => {
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }, 50);
+    chatBox.scrollTop = chatBox.scrollHeight;  // Removido o setTimeout (mais eficiente)
 }
 
 // Função pra enviar mensagem
@@ -52,6 +59,7 @@ function sendMessage(event) {
     
     messageInput.value = "";
     updateSendButton();
+    messageInput.focus();  // Mantém o foco no input após enviar
     
     const userId = getUserId();
     
@@ -68,10 +76,10 @@ function sendMessage(event) {
         });
     })
     .catch(error => {
-        console.error("Erro:", error);
+        console.error("Erro ao receber resposta:", error);  // Mensagem de erro mais específica
         displayMessage({ 
             from: "her", 
-            text: "⚠️ Ocorreu um erro. Por favor, tente novamente."
+            text: "⚠️ Ocorreu um erro ao receber a resposta. Por favor, tente novamente."
         });
     });
 }
@@ -119,17 +127,14 @@ function init() {
     
     document.getElementById("mensagem").addEventListener("input", updateSendButton);
     
-    // Configura observadores de teclado e redimensionamento
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', handleKeyboard);
     }
     
-    window.addEventListener('resize', scrollToBottom);
+    window.addEventListener('resize', adjustChatHeight);  // Usando adjustChatHeight diretamente
     
-    // Foca no input quando a página carrega
     document.getElementById("mensagem").focus();
     
-    // Garante que a área de chat tenha a altura correta
     adjustChatHeight();
 }
 
@@ -148,5 +153,4 @@ function adjustChatHeight() {
     }
 }
 
-// Quando o DOM estiver carregado
 document.addEventListener("DOMContentLoaded", init);
