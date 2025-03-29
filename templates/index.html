@@ -13,15 +13,12 @@
             <div class="header-left">
                 <button class="back-btn" aria-label="Voltar">  <i class="fas fa-arrow-left"></i>
                 </button>
-               <!-- Imagem de perfil com clique para ampliar -->
-<img id="profile-pic" src="/static/img/clara_avatar.png" alt="Clara" class="avatar">
-
-<!-- Modal para ampliar a imagem -->
-<div id="modal" class="modal">
-  <span class="close">&times;</span>
-  <img class="modal-content" id="modal-img">
-</div>
-
+                <img src="{{ url_for('static', filename='img/clara_avatar.png') }}" alt="Avatar da Clara" class="avatar" id="avatar-thumbnail">
+                <div id="avatar-modal" class="modal">
+                  <span class="close" id="close-avatar">&times;</span>
+                  <img class="modal-content" id="avatar-full">
+                </div>
+                
                 <div class="contact-info">
                     <h1>Clara </h1>
                     <p class="status">online</p>

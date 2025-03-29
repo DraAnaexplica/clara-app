@@ -154,17 +154,3 @@ function adjustChatHeight() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
-// Modal de imagem de perfil
-const modal = document.getElementById("modal");
-const modalImg = document.getElementById("modal-img");
-const profilePic = document.getElementById("profile-pic");
-const closeBtn = document.getElementsByClassName("close")[0];
-
-profilePic.onclick = function() {
-  modal.style.display = "block";
-  modalImg.src = this.src;
-}
-
-closeBtn.onclick = function() {
-  modal.style.display = "none";
-}
