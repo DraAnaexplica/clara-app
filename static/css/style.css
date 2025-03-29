@@ -159,15 +159,15 @@ header i {
     bottom: 2px;
     right: 5px;
     font-size: 12px;
-    color: #999; /* Cor cinza para "enviado" */
+    color: #999; /* Cinza para "enviado" */
 }
 
 .checkmarks.read {
-    color: var(--whatsapp-blue); /* Azul do WhatsApp para "lido" */
+    color: var(--whatsapp-blue); /* Azul para "lido" */
 }
 
 .checkmarks i {
-    margin-left: 2px; /* Pequeno espaçamento entre os checks */
+    margin-left: 2px; /* Espaço entre os checks */
 }
 
 /* Área de Input - Fixa na parte inferior */

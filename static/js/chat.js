@@ -36,14 +36,13 @@ function displayMessage(message) {
                 checkmarks.innerHTML = '<i class="fas fa-check"></i><i class="fas fa-check"></i>';
                 checkmarks.classList.add('read');
             }
-        }, 2000); // 2 segundos de delay para simular a leitura
+        }, 2000); // 2 segundos de delay
     }
 }
 
 // Função para rolar para o final do chat
 function scrollToBottom() {
     const chatBox = document.getElementById("chat-box");
-    // Usamos setTimeout para garantir que o DOM foi atualizado
     setTimeout(() => {
         chatBox.scrollTop = chatBox.scrollHeight;
     }, 50);
@@ -131,17 +130,14 @@ function init() {
     
     document.getElementById("mensagem").addEventListener("input", updateSendButton);
     
-    // Configura observadores de teclado e redimensionamento
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', handleKeyboard);
     }
     
     window.addEventListener('resize', scrollToBottom);
     
-    // Foca no input quando a página carrega
     document.getElementById("mensagem").focus();
     
-    // Garante que a área de chat tenha a altura correta
     adjustChatHeight();
 }
 
@@ -160,5 +156,4 @@ function adjustChatHeight() {
     }
 }
 
-// Quando o DOM estiver carregado
 document.addEventListener("DOMContentLoaded", init);
