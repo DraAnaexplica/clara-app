@@ -154,3 +154,15 @@ function adjustChatHeight() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+// Ampliar imagem de perfil ao clicar
+document.querySelector('.avatar img').addEventListener('click', () => {
+    const overlay = document.createElement('div');
+    overlay.className = 'image-overlay';
+    overlay.innerHTML = `
+        <div class="image-container">
+            <img src="static/img/clara_avatar.png" alt="Clara em tamanho maior" />
+        </div>
+    `;
+    overlay.addEventListener('click', () => document.body.removeChild(overlay));
+    document.body.appendChild(overlay);
+});
