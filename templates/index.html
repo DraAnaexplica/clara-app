@@ -1,36 +1,30 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Clara</title>
-  <link rel="stylesheet" href="/static/css/style.css" />
+    <meta charset="UTF-8">
+    <title>Clara - IA Companheira</title>
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-  <div class="chat-container">
-    <div class="chat-header">
-      <div class="profile-picture">
-        <img id="avatar" src="/static/img/clara_avatar.png" alt="Clara" />
-      </div>
-      <div class="profile-info">
-        <h2>Clara</h2>
-        <p class="status">online</p>
-      </div>
+    <div class="chat-container">
+        <div class="chat-header">
+            <img src="/static/img/clara_avatar.png" alt="Avatar da Clara" class="avatar" onclick="ampliarImagem()">
+            <div class="header-text">
+                <h2>Clara 💖</h2>
+                <p>online</p>
+            </div>
+        </div>
+        <div id="chat-box" class="chat-box"></div>
+        <form id="chat-form" class="chat-form">
+            <input type="text" id="user-input" placeholder="Escreva uma mensagem..." autocomplete="off" required>
+            <button type="submit">Enviar</button>
+        </form>
     </div>
-    <div id="chat-messages" class="chat-messages"></div>
-    <form id="chat-form" class="chat-form">
-      <button type="button" class="emoji-btn">😊</button>
-      <input type="text" id="user-input" placeholder="Digite uma mensagem..." autocomplete="off"/>
-      <button type="submit">Enviar</button>
-    </form>
-  </div>
 
-  <!-- Modal para ampliar imagem -->
-  <div id="image-modal" class="modal">
-    <span class="close">&times;</span>
-    <img class="modal-content" id="modal-image" />
-  </div>
+    <div id="imagem-ampliada" class="modal" onclick="fecharImagem()">
+        <img src="/static/img/clara_avatar.png" alt="Clara Ampliada" class="modal-content">
+    </div>
 
-  <script src="/static/js/chat.js"></script>
+    <script src="/static/js/chat.js"></script>
 </body>
 </html>
