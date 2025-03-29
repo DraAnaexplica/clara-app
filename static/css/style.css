@@ -45,7 +45,7 @@ header {
     position: sticky;
     top: 0;
     z-index: 1000;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     min-height: 60px;
 }
 
@@ -115,7 +115,7 @@ header i {
 
 /* Mensagens */
 .message {
-    margin-bottom: 8px;
+    margin-bottom: 12px;
     padding: 8px 12px;
     border-radius: 7.5px;
     max-width: 70%;
@@ -127,7 +127,7 @@ header i {
 }
 
 .message.me {
-    background-color: var(--whatsapp-light-green);
+    background-color: var(--whatsapp-teal-green);
     color: white;
     margin-left: auto;
     border-radius: 7.5px 0 7.5px 7.5px;
@@ -139,6 +139,7 @@ header i {
     margin-right: auto;
     border-radius: 0 7.5px 7.5px 7.5px;
     box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
+    border: 1px solid #e1e1e1;
 }
 
 .timestamp {
@@ -189,6 +190,10 @@ header i {
     min-width: 0;
 }
 
+.input-wrapper input:focus {
+    box-shadow: 0 0 0 2px var(--whatsapp-light-green);
+}
+
 .emoji-btn, .attach-btn {
     background: none;
     border: none;
@@ -197,6 +202,13 @@ header i {
     cursor: pointer;
     padding: 5px;
     flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.emoji-btn:hover, 
+.attach-btn:hover {
+    opacity: 0.8;
+    transform: scale(1.05);
 }
 
 .send-btn {
@@ -211,10 +223,45 @@ header i {
     justify-content: center;
     cursor: pointer;
     flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.send-btn:hover {
+    opacity: 0.8;
+    transform: scale(1.05);
 }
 
 .send-btn i {
     font-size: 18px;
+}
+
+/* Typing Indicator */
+.typing-indicator {
+    display: inline-flex;
+    padding: 8px 12px;
+    background: var(--whatsapp-white);
+    border-radius: 18px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
+    align-items: center;
+}
+
+.typing-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--whatsapp-dark-gray);
+    border-radius: 50%;
+    margin: 0 2px;
+    animation: typingAnimation 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) { animation-delay: 0s; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingAnimation {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-5px); }
 }
 
 /* Ajustes para Teclado Virtual */
