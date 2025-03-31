@@ -28,7 +28,8 @@ def index():
     token = request.cookies.get("token_clara")
     if not token or token not in TOKENS_VALIDOS:
         return redirect(url_for("login"))
-    return app.send_static_file('index.html')
+    return render_template("index.html")
+
 
 @app.route('/clara', methods=['POST'])
 def conversar_com_clara():
