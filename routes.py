@@ -10,6 +10,12 @@ TOKENS_VALIDOS = {
     "vip456": {"expira": "2025-05-01"},
 }
 
+# Rota inicial pública (para instalação do PWA)
+@app.route('/inicio')
+def inicio():
+    return app.send_static_file("inicio.html")
+
+# Tela de login após o app estar instalado
 @app.route('/login', methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -23,6 +29,7 @@ def login():
             return render_template("login.html", erro="Token inválido.")
     return render_template("login.html")
 
+# Página principal da Clara (requer login com token válido)
 @app.route('/')
 def index():
     token = request.cookies.get("token_clara")
@@ -30,10 +37,7 @@ def index():
         return redirect(url_for("login"))
     return render_template("index.html")
 
-@app.route('/pwa-teste')
-def pwa_teste():
-    return render_template("index.html")
-
+# Endpoint da conversa com a Clara
 @app.route('/clara', methods=['POST'])
 def conversar_com_clara():
     data = request.get_json()
