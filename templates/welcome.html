@@ -14,6 +14,7 @@
       height: 100vh;
       background-color: #e5ddd5;
       margin: 0;
+      font-family: Arial, sans-serif;
     }
     .welcome-box {
       background: white;
@@ -34,9 +35,14 @@
       border-radius: 8px;
       font-size: 16px;
       cursor: pointer;
+      margin-top: 15px;
     }
     .welcome-box button:hover {
       background-color: #1ebe5d;
+    }
+    #installBtn {
+      display: none;
+      background-color: #075E54;
     }
   </style>
 </head>
@@ -44,9 +50,41 @@
   <div class="welcome-box">
     <h1>Bem-vindo à Clara 💬</h1>
     <p>Instale este app para ter acesso rápido à conversa com Clara.</p>
+
+    <!-- Botão customizado de instalação -->
+    <button id="installBtn">📲 Instalar Aplicativo</button>
+
+    <!-- Botão para entrar -->
     <form action="/login">
       <button type="submit">Entrar</button>
     </form>
   </div>
+
+  <script>
+    let deferredPrompt;
+    const installBtn = document.getElementById("installBtn");
+
+    // Ouve o evento que indica que o app é instalável
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = "inline-block";
+    });
+
+    // Ao clicar no botão, mostra o prompt nativo
+    installBtn.addEventListener("click", async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === "accepted") {
+          console.log("✅ App instalado com sucesso");
+        } else {
+          console.log("❌ Instalação recusada");
+        }
+        deferredPrompt = null;
+        installBtn.style.display = "none";
+      }
+    });
+  </script>
 </body>
 </html>
