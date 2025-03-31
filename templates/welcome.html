@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="theme-color" content="#075E54">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clara 💬</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #e5ddd5;
+      margin: 0;
+    }
+    .welcome-box {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
+    }
+    .welcome-box h1 {
+      color: #075E54;
+      margin-bottom: 20px;
+    }
+    .welcome-box button {
+      background-color: #25D366;
+      color: white;
+      border: none;
+      padding: 10px 25px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .welcome-box button:hover {
+      background-color: #1ebe5d;
+    }
+  </style>
+</head>
+<body>
+  <div class="welcome-box">
+    <h1>Bem-vindo à Clara 💬</h1>
+    <p>Instale este app para ter acesso rápido à conversa com Clara.</p>
+    <form action="/login">
+      <button type="submit">Entrar</button>
+    </form>
+  </div>
+</body>
+</html>

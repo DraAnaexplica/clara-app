@@ -1,7 +1,8 @@
 {
     "name": "Clara",
     "short_name": "Clara",
-    "start_url": "/",
+   "start_url": "/welcome",
+
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#075E54",
