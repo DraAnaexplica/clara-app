@@ -30,6 +30,9 @@ def index():
         return redirect(url_for("login"))
     return render_template("index.html")
 
+@app.route('/pwa-teste')
+def pwa_teste():
+    return render_template("index.html")
 
 @app.route('/clara', methods=['POST'])
 def conversar_com_clara():
@@ -44,3 +47,4 @@ def conversar_com_clara():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
