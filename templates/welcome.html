@@ -63,28 +63,28 @@
   <script>
     let deferredPrompt;
     const installBtn = document.getElementById("installBtn");
-
-    // Ouve o evento que indica que o app é instalável
+  
+    // Deixa o botão sempre visível como fallback
+    installBtn.style.display = "inline-block";
+  
+    // Ouve o evento se o navegador emitir
     window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      installBtn.style.display = "inline-block";
     });
-
-    // Ao clicar no botão, mostra o prompt nativo
+  
+    // Clicou? Tenta instalar, se tiver o prompt guardado
     installBtn.addEventListener("click", async () => {
       if (deferredPrompt) {
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === "accepted") {
-          console.log("✅ App instalado com sucesso");
-        } else {
-          console.log("❌ Instalação recusada");
-        }
+        console.log("Resultado da instalação:", outcome);
         deferredPrompt = null;
-        installBtn.style.display = "none";
+      } else {
+        alert("Se o seu navegador suportar, você verá a opção de instalar o app agora.");
       }
     });
   </script>
+  
 </body>
 </html>
