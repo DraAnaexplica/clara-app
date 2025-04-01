@@ -169,18 +169,4 @@ profilePic.onclick = function() {
 closeBtn.onclick = function() {
   modal.style.display = "none";
 }
-// 📲 Registrar o Service Worker (instalação do app)
-if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker
-        .register("/static/service-worker.js")
-        .then((reg) => {
-          console.log("✅ Service Worker registrado com sucesso:", reg.scope);
-        })
-        .catch((err) => {
-          console.error("❌ Erro ao registrar o Service Worker:", err);
-        });
-    });
-  }
-  
 
