@@ -3,13 +3,19 @@ import sqlite3
 import requests
 import json
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 from claraprompt import prompt_clara, prompt_proactive
 from openrouter_utils import gerar_resposta_clara
 import pytz
 import schedule
 import time
 import threading
+
+# Tokens válidos (copiado de routes.py)
+TOKENS_VALIDOS = {
+    "teste123": {"expira": "2025-04-30"},
+    "vip456": {"expira": "2025-05-01"},
+}
 app = Flask(__name__)
 
 # Configuração do fuso horário (GMT-3)
@@ -110,10 +116,17 @@ scheduler_thread.start()
 
 @app.route('/')
 def index():
-    # Carregar o histórico de mensagens do banco de dados
+    # Obter o user_id a partir do token do cookie
+    token = request.cookies.get("token_clara")
+    if not token or token not in TOKENS_VALIDOS:
+        return redirect(url_for("login"))
+    
+    user_id = token
+
+    # Carregar o histórico de mensagens do banco de dados para o usuário atual
     conn = sqlite3.connect('chat_history.db')
     c = conn.cursor()
-    c.execute("SELECT sender, message FROM messages ORDER BY id")
+    c.execute("SELECT sender, message FROM messages WHERE user_id = ? ORDER BY id", (user_id,))
     messages = c.fetchall()
     conn.close()
     return render_template('index.html', messages=messages)
