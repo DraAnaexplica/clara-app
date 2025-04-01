@@ -5,11 +5,11 @@ import json
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 from claraprompt import prompt_clara, prompt_proactive
+from openrouter_utils import gerar_resposta_clara
 import pytz
 import schedule
 import time
 import threading
-
 app = Flask(__name__)
 
 # Configuração do fuso horário (GMT-3)
