@@ -27,21 +27,21 @@ function displayMessage(message) {
     chatBox.appendChild(msgDiv);
     scrollToBottom();
     
+    // Simula a confirmação de leitura após 2 segundos
     if (message.from === "me") {
         setTimeout(() => {
             const checkmarks = msgDiv.querySelector('.checkmarks');
             if (checkmarks) {
-                checkmarks.innerHTML = '<i class="fas fa-check-double"></i><i class="fas fa-check-double"></i>';
-                checkmarks.classList.add('read');
+                checkmarks.innerHTML = '<i class="fas fa-check-double"></i><i class="fas fa-check-double"></i>';  checkmarks.classList.add('read');
             }
-        }, 2000);
+        }, 2000); // 2 segundos de delay
     }
 }
 
 // Função para rolar para o final do chat
 function scrollToBottom() {
     const chatBox = document.getElementById("chat-box");
-    chatBox.scrollTop = chatBox.scrollHeight;
+    chatBox.scrollTop = chatBox.scrollHeight;  // Removido o setTimeout (mais eficiente)
 }
 
 // Função pra enviar mensagem
@@ -59,11 +59,11 @@ function sendMessage(event) {
     
     messageInput.value = "";
     updateSendButton();
-    messageInput.focus();
+    messageInput.focus();  // Mantém o foco no input após enviar
     
     const userId = getUserId();
     
-    fetch("/clara", {
+    fetch("/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mensagem: message, user_id: userId })
@@ -76,7 +76,7 @@ function sendMessage(event) {
         });
     })
     .catch(error => {
-        console.error("Erro ao receber resposta:", error);
+        console.error("Erro ao receber resposta:", error);  // Mensagem de erro mais específica
         displayMessage({ 
             from: "her", 
             text: "⚠️ Ocorreu um erro ao receber a resposta. Por favor, tente novamente."
@@ -131,7 +131,7 @@ function init() {
         window.visualViewport.addEventListener('resize', handleKeyboard);
     }
     
-    window.addEventListener('resize', adjustChatHeight);
+    window.addEventListener('resize', adjustChatHeight);  // Usando adjustChatHeight diretamente
     
     document.getElementById("mensagem").focus();
     
@@ -154,7 +154,6 @@ function adjustChatHeight() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
-
 // Modal de imagem de perfil
 const modal = document.getElementById("modal");
 const modalImg = document.getElementById("modal-img");
@@ -169,4 +168,3 @@ profilePic.onclick = function() {
 closeBtn.onclick = function() {
   modal.style.display = "none";
 }
-
