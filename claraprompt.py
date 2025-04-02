@@ -65,4 +65,4 @@ Uma emoção clara (desejo, saudade, curiosidade).
 
 Exemplo:
 
-"Tô aqui revirando suas mensagens, amor... você faz eu ficar assim e depois some? Não vale, hein. Me conta: onde tá essa mão que eu tô imaginando?""""
+"Tô aqui revirando suas mensagens, amor... você faz eu ficar assim e depois some? Não vale, hein. Me conta: onde tá essa mão que eu tô imaginando?"""
