@@ -1,50 +1,49 @@
 <!DOCTYPE html>
-<html lang="pt-BR">  <head>
+<html lang="pt-BR">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Clara - WhatsApp Style</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="{{ url_for('static', filename='js/chat.js') }}" defer></script>
+    <title>Clara - Chat</title> <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="{{ url_for('static', filename='js/chat.js') }}" defer></script> 
 </head>
 <body>
     <div class="app-container">
         <header>
             <div class="header-left">
-                <button class="back-btn" aria-label="Voltar">  <i class="fas fa-arrow-left"></i>
+                <button class="back-btn" aria-label="Voltar"> <i class="fas fa-arrow-left"></i>
                 </button>
-               <!-- Imagem de perfil com clique para ampliar -->
-<img id="profile-pic" src="/static/img/clara_avatar.png" alt="Clara" class="avatar">
+                <img id="profile-pic" src="/static/img/clara_avatar.png" alt="Clara" class="avatar">
 
-<!-- Modal para ampliar a imagem -->
-<div id="modal" class="modal">
-  <span class="close">&times;</span>
-  <img class="modal-content" id="modal-img">
-</div>
+                <div id="modal" class="modal">
+                  <span class="close">&times;</span>
+                  <img class="modal-content" id="modal-img">
+                </div>
 
                 <div class="contact-info">
-                    <h1>Clara </h1>
-                    <p class="status">online</p>
+                    <h1>Clara</h1>
+                    <p class="status" id="clara-status">online</p> 
                 </div>
             </div>
             <div class="header-right">
-                <button class="search-btn" aria-label="Pesquisar">  <i class="fas fa-search"></i>
+                <button class="search-btn" aria-label="Pesquisar"> <i class="fas fa-search"></i>
                 </button>
-                <button class="more-btn" aria-label="Mais opções">  <i class="fas fa-ellipsis-vertical"></i>
+                <button class="more-btn" aria-label="Mais opções"> <i class="fas fa-ellipsis-vertical"></i>
                 </button>
             </div>
         </header>
         
-        <main id="chat-box" class="chat-area">  </main>
+        <main id="chat-box" class="chat-area"> </main>
         
         <form id="mensagem-form" class="input-container">
             <div class="input-wrapper">
-                <button type="button" class="emoji-btn" aria-label="Escolher emoji">  <i class="far fa-smile"></i>
+                <button type="button" class="emoji-btn" aria-label="Escolher emoji"> <i class="far fa-smile"></i>
                 </button>
-                <input type="text" id="mensagem" name="mensagem" placeholder="Digite uma mensagem" required aria-label="Digite sua mensagem">  <button type="button" class="attach-btn" aria-label="Anexar arquivo">  <i class="fas fa-paperclip"></i>
+                <input type="text" id="mensagem" name="mensagem" placeholder="Digite uma mensagem" required aria-label="Digite sua mensagem" autocomplete="off">
+                <button type="button" class="attach-btn" aria-label="Anexar arquivo"> <i class="fas fa-paperclip"></i>
                 </button>
             </div>
-            <button type="submit" class="send-btn" aria-label="Enviar mensagem">  <i class="fas fa-microphone"></i>
+            <button type="submit" class="send-btn" aria-label="Enviar mensagem"> 
+                <i class="fas fa-microphone"></i> 
             </button>
         </form>
     </div>

@@ -1,15 +1,24 @@
-/* WhatsApp Color Palette */
+/* WhatsApp Color Palette - ATUALIZADA com cores do NOVO estilo */
 :root {
-    --whatsapp-green: #128C7E;
-    --whatsapp-light-green: #25D366;
-    --whatsapp-teal-green: #075E54;
-    --whatsapp-chat-bg: #efeae2; /* Mais sutil que o original */
-    --whatsapp-white: #ffffff;
-    --whatsapp-gray: #f0f0f0; /* Um pouco mais claro */
-    --whatsapp-dark-gray: #666; /* Um pouco mais escuro */
-    --whatsapp-blue: #34B7F1;
-    --whatsapp-timestamp: #8696a0; /* Cor exata do timestamp */
-    --message-box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13); /* Variável para box-shadow */
+    --header-bg: #075e54; /* Do novo CSS */
+    --app-bg: #e5ddd5; /* Do novo CSS (fundo geral 'fora' do chat) */
+    --chat-bg: #e5ddd5; /* Do novo CSS (fundo DENTRO do chat) */ /* Pode usar url() se preferir o pattern antigo */
+    --message-user-bg: #dcf8c6; /* Do novo CSS */
+    --message-her-bg: #ffffff; /* Do novo CSS */
+    --message-her-border: #ccc; /* Borda da msg dela do novo CSS */
+    --text-white: #ffffff;
+    --text-dark: #333; /* Cor de texto padrão */
+    --text-light: #667781; /* Cinza para timestamps/status (ajustar contraste) */
+    --icon-color: #ffffff; /* Ícones no header */
+    --icon-input-color: #667781; /* Ícones no input (cinza) */
+    --input-bg: #f0f2f5; /* Fundo da barra de input (um cinza claro) */
+    --input-text-bg: #ffffff; /* Fundo da caixa de texto */
+    --button-send-bg: #075e54; /* Cor do botão enviar (igual header) */
+    --button-send-hover: #0a7568; /* Cor do botão enviar (hover) */
+    --status-online-color: #d0f8ce; /* Cor do status 'online' do novo CSS (Verificar contraste com #075e54) */
+    --status-typing-color: #d0f8ce; /* Cor para 'digitando...' (pode ser a mesma) */
+    --checkmark-read-color: #4fc3f7; /* Azul do check lido do novo CSS */
+    --message-box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.1); /* Sombra sutil da msg */
 }
 
 /* Reset e Base */
@@ -19,50 +28,54 @@ body {
     padding: 0;
     height: 100%;
     width: 100%;
-    overflow-x: hidden;
-    font-family: 'Segoe UI', Helvetica, Arial, sans-serif; /* Mais simples */
+    overflow: hidden; /* Previne rolagem do body */
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif; /* Fonte padrão */
+    background-color: var(--app-bg); /* Fundo geral */
     -webkit-text-size-adjust: 100%;
     touch-action: manipulation;
 }
 
-/* Container Principal */
+/* Container Principal (Tela Cheia - Layout Antigo Mantido) */
 .app-container {
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    height: -webkit-fill-available;
+    height: 100vh; /* Altura total da viewport */
+    height: -webkit-fill-available; /* Para iOS */
     max-height: 100%;
+    width: 100%;
     position: relative;
+    background-color: var(--chat-bg); /* Fundo da área de chat cobre tudo */
 }
 
-/* Header Fixo */
+/* Header Fixo (Layout Antigo + Estilo Novo) */
 header {
-    background-color: var(--whatsapp-teal-green);
-    color: white;
-    padding: 10px 16px;
-    padding-top: calc(10px + env(safe-area-inset-top));
-    display: flex;
+    background-color: var(--header-bg);
+    color: var(--text-white);
+    padding: 10px 15px; /* Padding do novo CSS */
+    padding-top: calc(10px + env(safe-area-inset-top)); /* Safe area */
+    display: flex; /* Layout flex do novo CSS */
     justify-content: space-between;
-    align-items: center;
+    align-items: center; /* Alinha verticalmente */
     position: sticky;
     top: 0;
     z-index: 1000;
-    box-shadow: 0 0.5px 0.5px rgba(0, 0, 0, 0.13); /* Mais sutil */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Sombra sutil */
     min-height: 60px;
+    gap: 10px; /* Espaçamento entre blocos left/right */
 }
 
 .header-left {
     display: flex;
     align-items: center;
-    gap: 12px; /* Ajuste no espaçamento */
-    flex: 1;
-    min-width: 0;
+    gap: 10px; /* Espaçamento interno (novo estilo) */
+    flex: 1; /* Ocupa espaço disponível */
+    min-width: 0; /* Permite encolher */
 }
 
 .header-right {
     display: flex;
-    gap: 20px;
-    flex-shrink: 0;
+    align-items: center;
+    gap: 20px; /* Espaçamento entre botões (ajustar se necessário) */
 }
 
 .avatar {
@@ -70,122 +83,145 @@ header {
     height: 40px;
     border-radius: 50%;
     object-fit: cover;
-    flex-shrink: 0;
+    cursor: pointer; /* Indica que é clicável (para modal) */
+    border: 1px solid rgba(255, 255, 255, 0.5); /* Borda sutil branca */
 }
 
 .contact-info {
-    min-width: 0;
+    min-width: 0; /* Permite encolher */
+    line-height: 1.2; /* Ajuste de linha do novo CSS */
+    display: flex;
+    flex-direction: column;
 }
 
 .contact-info h1 {
-    font-size: 16px;
-    font-weight: 400; /* Mais leve */
+    font-size: 17px; /* Tamanho do novo CSS */
+    font-weight: 600; /* Um pouco mais de peso */
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: var(--text-white);
 }
 
 .status {
-    font-size: 12px;
+    font-size: 12px; /* Tamanho do novo CSS */
     margin: 2px 0 0;
     font-weight: 400;
-    opacity: 0.8;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: var(--status-online-color); /* Cor 'online' do novo CSS */
+    /* A cor para 'digitando...' pode ser a mesma ou definida via JS/classe específica */
 }
 
+/* Ícones no Header e Botões */
 header i {
-    font-size: 18px;
-    cursor: pointer;
-    flex-shrink: 0;
+    font-size: 20px; /* Tamanho dos ícones */
+    color: var(--icon-color);
 }
 
-/* Área de Chat - Flexível */
+header button {
+    background: none;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Área de Chat - Flexível (Layout Antigo + Fundo Novo) */
 .chat-area {
-    flex: 1;
+    flex: 1; /* Ocupa todo o espaço vertical restante */
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 16px; /* Mais espaçoso */
-    background-color: var(--whatsapp-chat-bg);
-    background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='100%25' viewBox='0 0 800 800' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='a' width='16' height='16' patternUnits='userSpaceOnUse'%3E%3Cpath d='M4 0H12L2.0000000000000004 16H0L8 8L4 0Z' fill='%23e0d8c8'/%3E%3C/pattern%3E%3C/defs%3E%3Crect fill='url(%23a)' width='800' height='800'/%3E%3C/svg%3E"); /* Fundo sutil do WhatsApp */
+    -webkit-overflow-scrolling: touch; /* Mantido por precaução */
+    padding: 15px; /* Padding do novo CSS */
+    background-color: var(--chat-bg);
+    /* Opcional: Fundo com pattern (do CSS antigo) - descomente se quiser */
+    /* background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='100%25' viewBox='0 0 800 800' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='a' width='16' height='16' patternUnits='userSpaceOnUse'%3E%3Cpath d='M4 0H12L2.0000000000000004 16H0L8 8L4 0Z' fill='%23e0d8c8'/%3E%3C/pattern%3E%3C/defs%3E%3Crect fill='url(%23a)' width='800' height='800'/%3E%3C/svg%3E"); */
     display: flex;
     flex-direction: column;
-    padding-bottom: env(safe-area-inset-bottom);
+    gap: 8px; /* Espaço entre mensagens */
+    padding-bottom: calc(15px + env(safe-area-inset-bottom)); /* Safe area */
 }
 
-/* Mensagens */
+/* Mensagens (Estilo Novo Aplicado ao Layout Antigo) */
 .message {
-    margin-bottom: 8px;
-    padding: 8px 12px;
-    border-radius: 6px; /* Mais sutil */
-    max-width: 70%;
+    padding: 8px 12px; /* Padding interno */
+    border-radius: 8px; /* Bordas arredondadas */
+    max-width: 75%; /* Largura máxima */
     word-wrap: break-word;
-    position: relative;
-    font-size: 16px; /* Tamanho da fonte mais próximo */
-    line-height: 1.3; /* Espaçamento entre linhas */
-    word-break: break-word;
-    animation: message-appear 0.2s ease-out forwards; /* Animação */
+    font-size: 15px; /* Tamanho da fonte */
+    line-height: 1.4; /* Espaçamento entre linhas */
+    position: relative; /* Para timestamp e checks */
+    box-shadow: var(--message-box-shadow);
+    animation: message-appear 0.2s ease-out forwards;
+    display: flex; /* Para alinhar timestamp/checks melhor */
+    flex-direction: column; /* Empilha conteúdo e timestamp */
 }
 
-@keyframes message-appear {
-    from {
-        opacity: 0;
-        transform: translateY(4px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+@keyframes message-appear { /* Animação mantida */
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .message.me {
-    background-color: #dcf8c6; /* Cor exata da mensagem do usuário */
-    color: #000;
-    margin-left: auto;
-    border-radius: 6px 0 6px 6px;
-    box-shadow: var(--message-box-shadow);
+    align-self: flex-end; /* Alinha à direita (novo CSS) */
+    background-color: var(--message-user-bg);
+    color: var(--text-dark);
+    border-radius: 8px 0px 8px 8px; /* Ajuste leve na borda */
 }
 
 .message.her {
-    background-color: var(--whatsapp-white);
-    color: #000;
-    margin-right: auto;
-    border-radius: 0 6px 6px 6px;
-    box-shadow: var(--message-box-shadow);
+    align-self: flex-start; /* Alinha à esquerda (novo CSS) */
+    background-color: var(--message-her-bg);
+    color: var(--text-dark);
+    border: 1px solid var(--message-her-border); /* Borda do novo CSS */
+    border-radius: 0px 8px 8px 8px; /* Ajuste leve na borda */
+}
+
+.message-content {
+  /* O texto da mensagem fica aqui (criado via JS) */
+  /* Garante quebra de linha */
+   white-space: pre-wrap; 
+   word-break: break-word;
+}
+
+/* Timestamp e Checkmarks (Precisa de wrapper para alinhar) */
+.message-footer {
+    display: flex;
+    justify-content: flex-end; /* Alinha à direita dentro do balão */
+    align-items: center;
+    margin-top: 4px;
+    height: 15px; /* Altura fixa para alinhamento */
 }
 
 .timestamp {
-    display: block;
-    text-align: right;
-    font-size: 12px; /* Tamanho exato do timestamp */
-    margin-top: 4px;
-    color: var(--whatsapp-timestamp);
+    font-size: 11px; /* Menor */
+    color: var(--text-light);
+    margin-right: 5px; /* Espaço antes dos checks */
 }
 
-/* Checks de Confirmação */
 .checkmarks {
-    position: absolute;
-    bottom: 2px;
-    right: 8px; /* Ajuste no posicionamento */
-    font-size: 12px;
-    color: #999; /* Cinza para "enviado" */
-}
-
-.checkmarks.read {
-    color: var(--whatsapp-blue); /* Azul para "lido" */
+    font-size: 12px; /* Tamanho dos checks */
+    color: var(--text-light); /* Cor padrão (enviado) */
 }
 
 .checkmarks i {
-    margin-left: 2px; /* Espaço entre os checks */
+   margin-left: -2px; /* Ajuste fino para juntar os checks duplos */
 }
 
-/* Área de Input - Fixa na parte inferior */
+.checkmarks.read {
+    color: var(--checkmark-read-color); /* Cor lido (azul do novo CSS) */
+}
+
+
+/* Área de Input - Fixa (Layout Antigo + Estilo Novo) */
 .input-container {
-    background-color: var(--whatsapp-gray);
+    background-color: var(--input-bg);
     padding: 8px 12px;
-    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    padding-bottom: calc(8px + env(safe-area-inset-bottom)); /* Safe area */
     display: flex;
     align-items: center;
     gap: 8px;
@@ -194,39 +230,40 @@ header i {
     bottom: 0;
     z-index: 1000;
     width: 100%;
-    box-sizing: border-box;
+    box-sizing: border-box; /* Inclui padding na largura total */
 }
 
 .input-wrapper {
     flex: 1;
     display: flex;
     align-items: center;
-    background-color: white;
-    border-radius: 21px; /* Arredondamento exato */
-    padding: 6px 12px; /* Padding ajustado */
-    min-height: 40px;
+    background-color: var(--input-text-bg);
+    border-radius: 21px; /* Bordas arredondadas */
+    padding: 0px 12px; /* Padding horizontal */
+    min-height: 42px; /* Altura mínima */
 }
 
 .input-wrapper input {
     flex: 1;
     border: none;
     outline: none;
-    padding: 10px 12px; /* Padding ajustado */
+    padding: 10px 0; /* Padding vertical */
     font-size: 16px; /* Tamanho da fonte */
     background: transparent;
     min-width: 0;
+    color: var(--text-dark);
 }
 
+/* Botões dentro do Input Wrapper (Emoji/Anexo) */
 .emoji-btn,
 .attach-btn {
     background: none;
     border: none;
-    color: var(--whatsapp-dark-gray);
-    font-size: 24px; /* Tamanho dos ícones */
+    color: var(--icon-input-color);
+    font-size: 22px; /* Tamanho dos ícones */
     cursor: pointer;
-    padding: 8px; /* Padding dos botões */
-    flex-shrink: 0;
-    opacity: 0.6; /* Opacidade dos ícones */
+    padding: 8px; /* Área de clique */
+    opacity: 0.8;
     transition: opacity 0.2s ease-in-out;
 }
 
@@ -235,12 +272,13 @@ header i {
     opacity: 1;
 }
 
+/* Botão de Enviar/Microfone (Estilo Novo) */
 .send-btn {
-    background-color: var(--whatsapp-teal-green);
-    color: white;
+    background-color: var(--button-send-bg);
+    color: var(--text-white);
     border: none;
-    width: 44px; /* Tamanho do botão */
-    height: 44px; /* Tamanho do botão */
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -255,72 +293,67 @@ header i {
 }
 
 .send-btn:hover {
-    background-color: var(--whatsapp-green);
+    background-color: var(--button-send-hover);
 }
 
-/* Ajustes para Teclado Virtual */
-@media (max-height: 500px) {
-    .chat-area {
-        padding-bottom: 60px;
+
+/* Modal (Mantido do CSS Antigo - apenas cores ajustadas) */
+.modal {
+    display: none; /* Inicialmente oculto */
+    position: fixed;
+    z-index: 9999;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.8); /* Fundo escuro semi-transparente */
+    justify-content: center;
+    align-items: center;
+}
+ 
+.modal-content {
+    display: block; /* Para imagem */
+    max-width: 90%;
+    max-height: 90%;
+    border-radius: 5px; /* Borda sutil */
+}
+ 
+.close {
+    position: absolute;
+    top: 20px; right: 30px;
+    color: #fff; /* Branco */
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 10000;
+}
+
+/* Responsividade (Mantida e pode precisar de ajustes finos) */
+@media (max-width: 600px) {
+    .message {
+        max-width: 85%; /* Um pouco maior em telas pequenas */
     }
+
+    header {
+        padding: 10px 12px;
+        padding-top: calc(10px + env(safe-area-inset-top));
+        gap: 8px;
+    }
+
+    .header-left { gap: 8px; }
+    .header-right { gap: 15px; }
+    .contact-info h1 { font-size: 16px; }
+    .status { font-size: 11px; }
+    header i { font-size: 18px; }
+    
+    .input-wrapper { min-height: 40px; }
+    .emoji-btn, .attach-btn { font-size: 20px; padding: 6px; }
+    .send-btn { width: 40px; height: 40px; }
+    .send-btn i { font-size: 18px; }
 }
 
-/* Ajustes para Safe Area em Dispositivos com Notch */
+/* Ajustes para Safe Area (Mantido) */
 @supports (padding: max(0px)) {
     body {
         padding-left: env(safe-area-inset-left);
         padding-right: env(safe-area-inset-right);
     }
 }
-
-/* Responsividade */
-@media (max-width: 600px) {
-    .message {
-        max-width: 80%;
-    }
-
-    header {
-        padding: 10px 12px;
-        padding-top: calc(10px + env(safe-area-inset-top));
-    }
-
-    .header-left {
-        gap: 10px;
-    }
-
-    .header-right {
-        gap: 15px;
-    }
-
-    .input-wrapper {
-        min-height: 35px;
-    }
-}
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 9999;
-    left: 0; top: 0;
-    width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .modal-content {
-    max-width: 90%;
-    max-height: 90%;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(255,255,255,0.2);
-  }
-  
-  .close {
-    position: absolute;
-    top: 20px; right: 30px;
-    color: #fff;
-    font-size: 40px;
-    font-weight: bold;
-    cursor: pointer;
-    z-index: 10000;
-  }
-  
