@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Clara - Chat</title> 
+    
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script> 
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script> 
     <script src="{{ url_for('static', filename='js/chat.js') }}" defer></script> 
 </head>
 <body>
@@ -34,7 +36,9 @@
                 </button>
                 <button class="more-btn" aria-label="Mais opções"> <i class="fas fa-ellipsis-vertical"></i>
                 </button>
-            </div>
+                
+                <button id="install-app-button" style="display: none; background-color: #25D366; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-left: 10px;">Instalar App</button> 
+                </div>
         </header>
         
         <main id="chat-box" class="chat-area"> </main>
@@ -52,5 +56,6 @@
             </button>
         </form>
     </div>
+    
 </body>
 </html>

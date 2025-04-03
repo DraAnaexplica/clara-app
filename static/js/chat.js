@@ -5,7 +5,8 @@
     // Cache de elementos DOM frequentemente usados
     let chatBox, messageInput, messageForm, sendBtn, claraStatusElement, 
         profilePic, modal, modalImg, closeModalBtn,
-        emojiBtn, emojiPicker; // <<< ADICIONADO Variáveis para emoji >>>
+        emojiBtn, emojiPicker,
+        deferredInstallPrompt = null; // Variável para PWA Install Prompt
 
     // --- INICIALIZAÇÃO ---
     function init() {
@@ -19,326 +20,125 @@
         modal = document.getElementById("modal");
         modalImg = document.getElementById("modal-img");
         closeModalBtn = document.querySelector(".modal .close"); 
-        emojiBtn = document.querySelector('.emoji-btn'); // <<< ADICIONADO Seleção do botão emoji >>>
+        emojiBtn = document.querySelector('.emoji-btn'); 
+        const installButton = document.getElementById('install-app-button'); // <<< ADICIONADO Seleção do botão Instalar >>>
 
-        // Verifica se os elementos essenciais do formulário/chat existem
+        // Verifica se os elementos essenciais existem
         if (!chatBox || !messageInput || !messageForm || !sendBtn || !claraStatusElement) {
              console.error("Erro: Elementos essenciais do chat não foram encontrados no DOM.");
-             return; // Interrompe a inicialização se algo crítico faltar
+             return; 
+        }
+
+        // Registra o Service Worker
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}") // Ou '/static/sw.js'
+            .then((registration) => { console.log('Service Worker: Registrado com sucesso:', registration.scope); })
+            .catch((error) => { console.error('Service Worker: Falha no registro:', error); });
+        } else {
+          console.warn('Service Worker: Não suportado.');
         }
         
-        // Adiciona listeners do formulário e input
+        // Adiciona listeners do formulário, input e botões
         messageForm.addEventListener("submit", sendMessage);
         messageInput.addEventListener("input", updateSendButton);
         messageInput.addEventListener("keypress", handleEnterKey);
-        updateSendButton(); // Define o estado inicial do botão (microfone)
-
-        // Adiciona listener para o botão de emoji (SE ele existir)
-        // vv ADICIONADO Listener para o botão emoji vv
-        if (emojiBtn) {
-            emojiBtn.addEventListener('click', toggleEmojiPicker);
-        } else {
-            console.warn("Botão de emoji (.emoji-btn) não encontrado.");
-        }
-        // ^^ FIM do listener do botão emoji ^^
-
-        // Adiciona listeners do modal de perfil (se existir)
+        updateSendButton(); 
+        if (emojiBtn) { emojiBtn.addEventListener('click', toggleEmojiPicker); } 
+        else { console.warn("Botão emoji não encontrado."); }
         if (profilePic && modal && modalImg && closeModalBtn) {
              profilePic.addEventListener("click", openProfileModal);
              closeModalBtn.addEventListener("click", closeProfileModal);
-             // Fecha modal se clicar no fundo escuro
-             modal.addEventListener("click", function(event) {
-                if (event.target === modal) {
-                    closeProfileModal();
-                }
-             });
-        } else {
-            console.warn("Elementos do modal não encontrados. Funcionalidade de clique na foto desativada.");
-        }
+             modal.addEventListener("click", (event) => { if (event.target === modal) closeProfileModal(); });
+        } else { console.warn("Elementos do modal não encontrados."); }
         
-        // Ajustes de layout na inicialização e em resize
+        // --- <<< ADICIONADO Listener para o botão Instalar App >>> ---
+        if (installButton) {
+            installButton.addEventListener('click', handleInstallClick);
+            console.log('[PWA] Listener de clique adicionado ao botão Instalar.');
+        } else {
+            console.warn('[PWA] Botão de Instalação (#install-app-button) não encontrado no HTML.');
+        }
+        // --- <<< FIM do Listener Instalar App >>> ---
+
+        // Ajustes de layout
         window.addEventListener('resize', adjustChatHeight);
-        adjustChatHeight(); // Ajusta altura inicial
+        adjustChatHeight(); 
 
-        // Foco inicial no input (bom para desktop)
+        // Foco inicial
         messageInput.focus(); 
     }
 
-    // --- FUNÇÕES DE UTILIDADE --- (getUserId, formatTime, scrollToBottom, etc. - mantidas como antes)
+    // --- FUNÇÕES DE UTILIDADE --- 
+    // (getUserId, formatTime, scrollToBottom, setTypingStatus, updateSendButton, adjustChatHeight - mantidos)
+    function getUserId() { /* ...código mantido... */  let userId = localStorage.getItem('user_id'); if (!userId) { userId = 'user-' + Date.now().toString(36) + Math.random().toString(36).substring(2, 7); try { localStorage.setItem('user_id', userId); } catch (e) { console.error("LS Error:", e); return 'user-temp-' + Date.now().toString(36); } } return userId; }
+    function formatTime(date = new Date()) { /* ...código mantido... */  try { return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false }); } catch (e) { const h = String(date.getHours()).padStart(2, '0'); const m = String(date.getMinutes()).padStart(2, '0'); return `${h}:${m}`; } }
+    function scrollToBottom() { /* ...código mantido... */  if (chatBox) { chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'auto' }); } }
+    function setTypingStatus(isTyping) { /* ...código mantido... */  if (claraStatusElement) { claraStatusElement.classList.toggle('typing', isTyping); claraStatusElement.textContent = isTyping ? "digitando..." : "online"; } }
+    function updateSendButton() { /* ...código mantido... */  if (!sendBtn || !messageInput) return; if (messageInput.value.trim().length > 0) { sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>'; } else { sendBtn.innerHTML = '<i class="fas fa-microphone"></i>'; } }
+    function adjustChatHeight() { /* ...código mantido... */  const header = document.querySelector('header'); const inputContainer = document.querySelector('.input-container'); if (header && inputContainer && chatBox) { const hH = header.offsetHeight; const iH = inputContainer.offsetHeight; chatBox.style.height = `calc(100vh - ${hH}px - ${iH}px)`; } }
 
-    // Gera ou recupera um ID de usuário único (localStorage)
-    function getUserId() {
-        let userId = localStorage.getItem('user_id');
-        if (!userId) {
-            userId = 'user-' + Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
-            try {
-                localStorage.setItem('user_id', userId);
-            } catch (e) {
-                console.error("Não foi possível salvar user_id no localStorage:", e);
-                return 'user-temp-' + Date.now().toString(36); 
-            }
+    // --- LÓGICA PRINCIPAL DO CHAT --- 
+    // (displayMessage, sendMessage - mantidos)
+    function displayMessage(message) { /* ...código mantido... */   if (!chatBox || !message.text) return; const mD = document.createElement("div"); mD.className = `message ${message.from}`; const cD = document.createElement("div"); cD.className = "message-content"; cD.textContent = message.text; cD.style.whiteSpace = 'pre-wrap'; cD.style.wordBreak = 'break-word'; mD.appendChild(cD); const fD = document.createElement("div"); fD.className = "message-footer"; const tS = document.createElement("span"); tS.className = "timestamp"; tS.textContent = formatTime(); fD.appendChild(tS); if (message.from === "me") { const cS = document.createElement("span"); cS.className = "checkmarks"; cS.innerHTML = '<i class="fas fa-check"></i>'; fD.appendChild(cS); const cSFT = cS; setTimeout(() => { if (cSFT && chatBox.contains(cSFT)) { cSFT.innerHTML = '<i class="fas fa-check-double"></i>'; cSFT.classList.add('read'); } }, 1500 + Math.random() * 1000); } mD.appendChild(fD); chatBox.appendChild(mD); scrollToBottom();  }
+    async function sendMessage(event) { /* ...código mantido... */  if (event) event.preventDefault(); if (!messageInput) return; const msg = messageInput.value.trim(); if (msg === "") return; const uId = getUserId(); displayMessage({ from: "me", text: msg }); messageInput.value = ""; updateSendButton(); messageInput.blur(); setTypingStatus(true); try { const rsp = await fetch("/clara", { method: "POST", headers: { "Content-Type": "application/json", }, body: JSON.stringify({ mensagem: msg, user_id: uId }) }); if (!rsp.ok) { let eD = rsp.statusText; try { const eDt = await rsp.json(); eD = eDt.error || eDt.message || eD; } catch (e) {} throw new Error(`Erro ${rsp.status}: ${eD}`); } const data = await rsp.json(); displayMessage({ from: "her", text: data.resposta || "Hmm..." }); } catch (err) { console.error("Falha API:", err); displayMessage({ from: "her", text: `⚠️ Ops! ${err.message || "..."}` }); } finally { setTypingStatus(false); } }
+
+    // --- FUNÇÕES DO EMOJI PICKER ---
+    // (toggleEmojiPicker, closeEmojiPicker, handleEmojiSelection, handleClickOutsidePicker - mantidos)
+    function toggleEmojiPicker() { /* ...código mantido... */   if (!emojiPicker) { console.log("Criando emoji picker..."); emojiPicker = document.createElement('emoji-picker'); emojiPicker.style.position = 'absolute'; emojiPicker.style.bottom = '60px'; emojiPicker.style.left = '10px'; emojiPicker.style.zIndex = '1100'; emojiPicker.classList.add('light'); document.body.appendChild(emojiPicker); emojiPicker.addEventListener('emoji-click', handleEmojiSelection); setTimeout(() => { document.addEventListener('click', handleClickOutsidePicker, { capture: true, once: true }); }, 0); } else { console.log("Fechando emoji picker..."); closeEmojiPicker(); } }
+    function closeEmojiPicker() { /* ...código mantido... */   if (emojiPicker) { emojiPicker.removeEventListener('emoji-click', handleEmojiSelection); if (document.body.contains(emojiPicker)) { document.body.removeChild(emojiPicker); } emojiPicker = null; document.removeEventListener('click', handleClickOutsidePicker, { capture: true }); console.log("Emoji picker fechado."); } }
+    function handleEmojiSelection(event) { /* ...código mantido... */  console.log("Emoji selecionado:", event.detail); if (!messageInput) return; const emj = event.detail.unicode; const pos = messageInput.selectionStart; const txtB = messageInput.value.substring(0, pos); const txtA = messageInput.value.substring(pos); messageInput.value = txtB + emj + txtA; const nPos = pos + emj.length; messageInput.selectionStart = nPos; messageInput.selectionEnd = nPos; messageInput.focus(); updateSendButton(); /* closeEmojiPicker(); */  }
+    function handleClickOutsidePicker(event) { /* ...código mantido... */   if (emojiPicker && !emojiPicker.contains(event.target) && emojiBtn && !emojiBtn.contains(event.target)) { console.log("Clique fora detectado."); closeEmojiPicker(); } else if (emojiPicker) { document.addEventListener('click', handleClickOutsidePicker, { capture: true, once: true }); } }
+
+    // --- HANDLERS DE EVENTOS ADICIONAIS --- 
+    // (handleEnterKey, openProfileModal, closeProfileModal - mantidos)
+    function handleEnterKey(event) { /* ...código mantido... */  if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); if (messageForm) { messageForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true })); } } }
+    function openProfileModal() { /* ...código mantido... */  if (modal && modalImg && profilePic) { modalImg.src = profilePic.src; modal.style.display = "flex"; } }
+    function closeProfileModal() { /* ...código mantido... */  if (modal) { modal.style.display = "none"; } }
+
+    // --- LÓGICA PWA INSTALL PROMPT ---
+
+    // Listener para Capturar Evento de Instalação (Modificado para mostrar o botão)
+    window.addEventListener('beforeinstallprompt', (event) => {
+      console.log('[PWA] Evento beforeinstallprompt capturado!');
+      event.preventDefault(); 
+      deferredInstallPrompt = event; 
+      console.log('[PWA] Prompt de instalação guardado.');
+      
+      // --- <<< ADICIONADO Lógica para mostrar o botão >>> ---
+      const installButton = document.getElementById('install-app-button');
+      if (installButton) {
+          console.log('[PWA] Tornando o botão de instalação visível.');
+          installButton.style.display = 'inline-block'; // Ou 'block'
+      }
+      // --- <<< FIM da Lógica para mostrar o botão >>> ---
+    });
+
+    // Função para Disparar Instalação (Já estava aqui)
+    async function handleInstallClick() {
+      console.log('[PWA] Botão Instalar clicado.');
+      const installButton = document.getElementById('install-app-button'); 
+
+      if (deferredInstallPrompt) { 
+        deferredInstallPrompt.prompt(); 
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        console.log(`[PWA] Resultado da instalação: ${outcome}`); 
+        deferredInstallPrompt = null; 
+        if (installButton) {
+          installButton.style.display = 'none'; 
+          console.log('[PWA] Botão de instalação escondido após uso.');
         }
-        return userId;
+      } else {
+        console.log('[PWA] Nenhum prompt de instalação para mostrar.');
+        if (installButton) installButton.style.display = 'none'; 
+      }
     }
 
-    // Formata a hora atual para HH:MM (formato 24h)
-    function formatTime(date = new Date()) {
-        try {
-            return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false });
-        } catch (e) {
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            return `${hours}:${minutes}`;
-        }
-    }
-
-    // Rola a área de chat para a última mensagem
-    function scrollToBottom() {
-        if (chatBox) {
-            chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'auto' }); 
-        }
-    }
-
-    // Atualiza o status da Clara (online/digitando)
-    function setTypingStatus(isTyping) {
-        if (claraStatusElement) {
-            claraStatusElement.classList.toggle('typing', isTyping); 
-            claraStatusElement.textContent = isTyping ? "digitando..." : "online"; 
-        }
-    }
-
-    // Atualiza o ícone do botão Enviar/Microfone
-    function updateSendButton() {
-        if (!sendBtn || !messageInput) return; 
-
-        if (messageInput.value.trim().length > 0) {
-            sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>'; // Ícone Enviar
-        } else {
-            sendBtn.innerHTML = '<i class="fas fa-microphone"></i>'; // Ícone Microfone
-        }
-    }
-    
-    // Ajusta a altura da área de chat dinamicamente
-    function adjustChatHeight() {
-        const header = document.querySelector('header'); 
-        const inputContainer = document.querySelector('.input-container'); 
-        
-        if (header && inputContainer && chatBox) {
-            const headerHeight = header.offsetHeight;
-            const inputHeight = inputContainer.offsetHeight;
-            chatBox.style.height = `calc(100vh - ${headerHeight}px - ${inputHeight}px)`;
-        }
-    }
-
-    // --- LÓGICA PRINCIPAL DO CHAT --- (displayMessage, sendMessage - mantidas como antes, com o blur() já incluído)
-
-    // Exibe uma mensagem na tela (usuário ou Clara)
-    function displayMessage(message) {
-        if (!chatBox || !message.text) return; 
-
-        const msgDiv = document.createElement("div");
-        msgDiv.className = `message ${message.from}`; 
-
-        const contentDiv = document.createElement("div");
-        contentDiv.className = "message-content";
-        contentDiv.textContent = message.text; 
-        contentDiv.style.whiteSpace = 'pre-wrap'; 
-        contentDiv.style.wordBreak = 'break-word';
-        msgDiv.appendChild(contentDiv);
-
-        const footerDiv = document.createElement("div");
-        footerDiv.className = "message-footer";
-
-        const timeSpan = document.createElement("span");
-        timeSpan.className = "timestamp";
-        timeSpan.textContent = formatTime(); 
-        footerDiv.appendChild(timeSpan);
-
-        if (message.from === "me") {
-            const checkSpan = document.createElement("span");
-            checkSpan.className = "checkmarks";
-            checkSpan.innerHTML = '<i class="fas fa-check"></i>'; 
-            footerDiv.appendChild(checkSpan);
-
-            const checkmarkSpanForTimeout = checkSpan; 
-            setTimeout(() => {
-                if (checkmarkSpanForTimeout && chatBox.contains(checkmarkSpanForTimeout)) { 
-                    checkmarkSpanForTimeout.innerHTML = '<i class="fas fa-check-double"></i>'; 
-                    checkmarkSpanForTimeout.classList.add('read'); 
-                }
-            }, 1500 + Math.random() * 1000); 
-        }
-        
-        msgDiv.appendChild(footerDiv); 
-        chatBox.appendChild(msgDiv); 
-        scrollToBottom(); 
-    }
-
-    // Função assíncrona para enviar a mensagem
-    async function sendMessage(event) {
-        if (event) event.preventDefault(); 
-        if (!messageInput) return; 
-
-        const messageText = messageInput.value.trim();
-        if (messageText === "") return; 
-
-        const currentUserId = getUserId(); 
-        
-        displayMessage({ from: "me", text: messageText }); 
-        
-        messageInput.value = "";
-        updateSendButton(); 
-        messageInput.blur(); // Correção do teclado já está aqui
-
-        setTypingStatus(true); 
-
-        try {
-            const response = await fetch("/clara", { 
-                method: "POST",
-                headers: { 
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ mensagem: messageText, user_id: currentUserId }) 
-            });
-
-            if (!response.ok) { 
-                let errorDetail = response.statusText; 
-                try {
-                    const errorData = await response.json();
-                    errorDetail = errorData.error || errorData.message || errorDetail;
-                } catch (e) { /* Ignora */ }
-                throw new Error(`Erro ${response.status}: ${errorDetail}`); 
-            }
-
-            const data = await response.json();
-
-            displayMessage({ 
-                from: "her", 
-                text: data.resposta || "Hmm, não entendi bem o que dizer agora." 
-            });
-
-        } catch (error) {
-            console.error("Falha na comunicação com a API:", error);
-            displayMessage({ 
-                from: "her", 
-                text: `⚠️ Ops! ${error.message || "Tive um problema para me conectar."}` 
-            });
-        } finally {
-            setTypingStatus(false); 
-        }
-    }
-
-    // --- <<< ADICIONADO Bloco de Funções para Emoji Picker >>> ---
-    // Mostra ou esconde o seletor de emojis
-    function toggleEmojiPicker() {
-        if (!emojiPicker) {
-            console.log("Criando emoji picker...");
-            emojiPicker = document.createElement('emoji-picker');
-            emojiPicker.style.position = 'absolute'; 
-            emojiPicker.style.bottom = '60px'; // Posição inicial (temporária)
-            emojiPicker.style.left = '10px';  // Posição inicial (temporária)
-            emojiPicker.style.zIndex = '1100'; 
-            emojiPicker.classList.add('light'); 
-
-            document.body.appendChild(emojiPicker); 
-
-            emojiPicker.addEventListener('emoji-click', handleEmojiSelection);
-
-             setTimeout(() => {
-                document.addEventListener('click', handleClickOutsidePicker, { capture: true, once: true });
-             }, 0);
-
-        } else {
-            console.log("Fechando emoji picker...");
-            closeEmojiPicker();
-        }
-    }
-
-    // Função auxiliar para fechar/remover o seletor de emojis
-    function closeEmojiPicker() {
-         if (emojiPicker) {
-            emojiPicker.removeEventListener('emoji-click', handleEmojiSelection); 
-            if (document.body.contains(emojiPicker)) { 
-                 document.body.removeChild(emojiPicker); 
-            }
-            emojiPicker = null; 
-             document.removeEventListener('click', handleClickOutsidePicker, { capture: true }); 
-             console.log("Emoji picker fechado.");
-         }
-    }
-    
-    // Função chamada quando um emoji é efetivamente clicado no seletor
-    function handleEmojiSelection(event) {
-        console.log("Emoji selecionado:", event.detail); 
-        if (!messageInput) return;
-
-        const emoji = event.detail.unicode; 
-        const cursorPos = messageInput.selectionStart; 
-
-        const textBefore = messageInput.value.substring(0, cursorPos);
-        const textAfter = messageInput.value.substring(cursorPos);
-        messageInput.value = textBefore + emoji + textAfter;
-
-        const newCursorPos = cursorPos + emoji.length;
-        messageInput.selectionStart = newCursorPos;
-        messageInput.selectionEnd = newCursorPos;
-
-        messageInput.focus(); 
-        updateSendButton(); 
-
-        // Opcional: Descomente para fechar após selecionar 1 emoji
-        // closeEmojiPicker(); 
-    }
-
-    // Função para detectar cliques fora do seletor e fechá-lo
-    function handleClickOutsidePicker(event) {
-        // Verifica se clicou FORA do picker E FORA do botão de emoji
-        if (emojiPicker && !emojiPicker.contains(event.target) && emojiBtn && !emojiBtn.contains(event.target)) {
-             console.log("Clique fora detectado, fechando picker.");
-            closeEmojiPicker();
-        } else if (emojiPicker) {
-            // Se clicou dentro ou no botão, o picker pode permanecer aberto. 
-            // Adiciona o listener de novo para o *próximo* clique fora.
-             document.addEventListener('click', handleClickOutsidePicker, { capture: true, once: true });
-        }
-    }
-    // --- <<< FIM do Bloco de Funções para Emoji Picker >>> ---
-
-
-    // --- HANDLERS DE EVENTOS ADICIONAIS --- (handleEnterKey, openProfileModal, closeProfileModal - mantidos como antes)
-
-    // Lida com a tecla Enter pressionada no input
-    function handleEnterKey(event) {
-        if (event.key === "Enter" && !event.shiftKey) { 
-            event.preventDefault(); 
-            if (messageForm) {
-                messageForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-            }
-        }
-    }
-
-    // Abre o modal da foto de perfil
-    function openProfileModal() {
-        if (modal && modalImg && profilePic) {
-            modalImg.src = profilePic.src; 
-            modal.style.display = "flex"; 
-        }
-    }
-
-    // Fecha o modal da foto de perfil
-    function closeProfileModal() {
-        if (modal) {
-            modal.style.display = "none"; 
-        }
-    }
 
     // --- INICIALIZAÇÃO DO SCRIPT ---
-
-    // Garante que o DOM esteja carregado antes de executar o init
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
-        init(); // DOM já carregado
+        init(); 
     }
 
 })(); // Fim da IIFE
