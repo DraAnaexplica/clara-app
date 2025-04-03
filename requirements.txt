@@ -3,5 +3,3 @@ gunicorn
 requests
 pytz
 python-dotenv
-schedule  # <--- ADICIONE ESTA LINHA
-# (outras bibliotecas que você usa, se houver)

@@ -1,193 +1,190 @@
 import os
 import sqlite3
-import requests # Necessário para send_proactive_message
-import json     # Necessário para send_proactive_message
-from datetime import datetime, timedelta # Importa timedelta também
-# <<< Garantir que redirect e url_for estão importados >>>
-from flask import Flask, request, jsonify, render_template, redirect, url_for, make_response, session 
-import pytz     # Necessário para send_proactive_message
-import schedule # Necessário para run_scheduler
-import time     # Necessário para run_scheduler
-import threading # Necessário para run_scheduler
+import requests
+import json
+from datetime import datetime
+from flask import Flask, render_template, request, jsonify
+from claraprompt import prompt_clara, prompt_proactive
+import pytz
+import schedule
+import time
+import threading
 
-# --- Importações das suas lógicas ---
-try:
-    from claraprompt import prompt_proactive 
-except ImportError:
-    print("AVISO: Arquivo claraprompt.py ou variável prompt_proactive não encontrado.")
-    prompt_proactive = "Instrução proativa padrão." 
-
-try:
-    from openrouter_utils import gerar_resposta_clara 
-except ImportError:
-    print("ERRO CRÍTICO: Arquivo openrouter_utils.py ou função gerar_resposta_clara não encontrado.")
-    def gerar_resposta_clara(mensagem_usuario, user_id=None): return "Erro: Módulo de resposta não encontrado." # Adicionado user_id opcional
-
-# --- Configuração do App Flask ---
 app = Flask(__name__)
-# Considere adicionar: app.secret_key = os.urandom(24)
 
-# Tokens válidos 
-TOKENS_VALIDOS = {
-    "teste123": {"expira": "2025-04-30"}, 
-    "vip456": {"expira": "2025-05-01"},
-}
-
-# Configuração do fuso horário 
+# Configuração do fuso horário (GMT-3)
 tz = pytz.timezone('America/Sao_Paulo')
 
-# --- Configuração do Banco de Dados --- 
-DATABASE = 'chat_history.db'
-
+# Configuração do banco de dados SQLite
 def init_db():
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect('chat_history.db')
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS messages
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  sender TEXT NOT NULL,
-                  message TEXT NOT NULL,
-                  timestamp TEXT NOT NULL)''') 
+                  sender TEXT,
+                  message TEXT,
+                  timestamp TEXT)''')
     conn.commit()
     conn.close()
 
-init_db() 
+init_db()
 
-# --- Funções de Mensagem Proativa --- 
-def get_current_time_str():
+# Função para obter o horário atual em GMT-3
+def get_current_time():
     return datetime.now(tz).strftime('%H:%M')
 
+# Função para enviar mensagem proativa
 def send_proactive_message():
-    gemini_api_key = os.getenv("GEMINI_API_KEY")
-    if not gemini_api_key:
-        print("Erro: GEMINI_API_KEY não configurada para msg proativa.")
-        return
-    print(f"[{datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')}] Tentando enviar msg proativa...")
-    history_text = "Nenhuma mensagem anterior."
-    try:
-        conn = sqlite3.connect(DATABASE)
+    print("Enviando mensagem proativa...")
+    
+    # Obter o histórico da conversa
+    conn = sqlite3.connect('chat_history.db')
+    c = conn.cursor()
+    c.execute("SELECT sender, message FROM messages ORDER BY id DESC LIMIT 5")
+    history = c.fetchall()
+    conn.close()
+
+    # Formatar o histórico para o prompt
+    history_text = "\n".join([f"{msg[0]}: {msg[1]}" for msg in history])
+    if not history_text:
+        history_text = "Nenhuma mensagem anterior."
+
+    # Preparar o prompt para mensagem proativa
+    current_time = get_current_time()
+    full_prompt = f"""
+    Horário atual: {current_time} (GMT-3)
+
+    Histórico da conversa:
+    {history_text}
+
+    {prompt_proactive}
+    """
+
+    # Enviar requisição para o Gemini API
+    print("Enviando requisição pro Gemini API...")
+    headers = {
+        "Content-Type": "application/json",
+    }
+    data = {
+        "contents": [{
+            "parts": [{
+                "text": full_prompt
+            }]
+        }]
+    }
+    response = requests.post(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" + os.getenv("GEMINI_API_KEY"),
+        headers=headers,
+        json=data
+    )
+
+    if response.status_code == 200:
+        print("Resposta do Gemini API:", response.json())
+        clara_response = response.json()['candidates'][0]['content']['parts'][0]['text']
+        
+        # Salvar a mensagem proativa no banco de dados
+        timestamp = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
+        conn = sqlite3.connect('chat_history.db')
         c = conn.cursor()
-        c.execute("SELECT sender, message FROM messages ORDER BY id DESC LIMIT 10") 
-        history = c.fetchall()[::-1] 
+        c.execute("INSERT INTO messages (sender, message, timestamp) VALUES (?, ?, ?)",
+                  ("Clara", clara_response, timestamp))
+        conn.commit()
         conn.close()
-        if history: history_text = "\n".join([f"{s}: {m}" for s, m in history])
-    except Exception as e: print(f"Erro DB proativo: {e}")
-    current_time = get_current_time_str()
-    full_prompt = f"Contexto:\n{history_text}\n\nHorário {current_time} (GMT-3), {prompt_proactive}"
-    print("Enviando requisição proativa Gemini...")
-    headers = { "Content-Type": "application/json" }
-    data = { "contents": [{ "parts": [{ "text": full_prompt }] }] }
-    try:
-        response = requests.post(f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={gemini_api_key}", headers=headers, json=data, timeout=60 )
-        response.raise_for_status() 
-        candidates = response.json().get('candidates')
-        if candidates and candidates[0].get('content', {}).get('parts'):
-            clara_response = candidates[0]['content']['parts'][0]['text'].strip()
-            timestamp = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
-            conn = sqlite3.connect(DATABASE)
-            c = conn.cursor()
-            c.execute("INSERT INTO messages (sender, message, timestamp) VALUES (?, ?, ?)", ("Clara", clara_response, timestamp))
-            conn.commit()
-            conn.close()
-            print(f"Msg proativa salva: {clara_response}")
-        else: print("Resposta proativa Gemini vazia.")
-    except requests.exceptions.RequestException as e: print(f"Erro API proativa: {e}")
-    except Exception as e: print(f"Erro inesperado proativo: {e}")
+        print(f"Mensagem proativa enviada: {clara_response}")
+    else:
+        print(f"Erro ao enviar mensagem proativa: {response.status_code} - {response.text}")
 
-# --- Agendador (Scheduler) --- 
+# Função para rodar o agendador em uma thread separada
 def run_scheduler():
-    print("Iniciando agendador...")
-    schedule.every().day.at("11:00", tz=tz).do(send_proactive_message) 
-    schedule.every().day.at("17:30", tz=tz).do(send_proactive_message) 
+    # Agendar mensagens proativas em horários específicos (em GMT-3)
+    schedule.every().day.at("11:00").do(send_proactive_message)  # Mensagem às 11:00
+    schedule.every().day.at("11:30").do(send_proactive_message)  # Mensagem às 11:30
+
     while True:
-        try: schedule.run_pending()
-        except Exception as e: print(f"Erro agendador: {e}")
-        time.sleep(60) 
+        schedule.run_pending()
+        time.sleep(60)  # Verifica a cada minuto
 
-if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-    scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
-    scheduler_thread.start()
-    print("Thread agendador iniciada.")
-else: print("Agendador não iniciado (recarregamento debug).")
+# Iniciar o agendador em uma thread separada
+scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
+scheduler_thread.start()
 
-# --- Rotas Flask ---
-
-@app.route('/login', methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        token_digitado = request.form.get("token", "")
-        if token_digitado in TOKENS_VALIDOS:
-            resp = make_response(redirect(url_for('index'))) 
-            expira_em = datetime.now(tz) + timedelta(days=30) 
-            resp.set_cookie("token_clara", token_digitado, expires=expira_em, httponly=True, samesite='Lax') 
-            print(f"Login OK: token={token_digitado}")
-            return resp
-        else:
-            print(f"Login Falhou: token={token_digitado}")
-            return render_template("login.html", erro="Token inválido ou expirado.")
-    return render_template("login.html")
-
-# --- <<< ROTA INDEX SUBSTITUÍDA E COM DEBUG PRINTS >>> ---
 @app.route('/')
 def index():
-    print("--- ROTA / ACESSADA ---") # Debug Print 1
-    token = request.cookies.get("token_clara") 
-    print(f"--- TOKEN ENCONTRADO NO COOKIE: {token} ---") # Debug Print 2
+    # Carregar o histórico de mensagens do banco de dados
+    conn = sqlite3.connect('chat_history.db')
+    c = conn.cursor()
+    c.execute("SELECT sender, message FROM messages ORDER BY id")
+    messages = c.fetchall()
+    conn.close()
+    return render_template('index.html', messages=messages)
+
+@app.route('/send_message', methods=['POST'])
+def send_message():
+    user_message = request.form['message']
     
-    # Checa se o token existe e está na lista de válidos
-    if not token or token not in TOKENS_VALIDOS:
-        print("--- TOKEN INVALIDO/AUSENTE - REDIRECIONANDO PARA LOGIN ---") # Debug Print 3
-        return redirect(url_for("login")) 
-    
-    # Se chegou aqui, o token é válido
-    print("--- TOKEN VALIDO - RENDERIZANDO INDEX.HTML ---") # Debug Print 4
-    return render_template("index.html") 
-# --- <<< FIM DA ROTA INDEX CORRIGIDA >>> ---
+    # Salvar a mensagem do usuário no banco de dados
+    timestamp = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
+    conn = sqlite3.connect('chat_history.db')
+    c = conn.cursor()
+    c.execute("INSERT INTO messages (sender, message, timestamp) VALUES (?, ?, ?)",
+              ("Você", user_message, timestamp))
+    conn.commit()
 
-@app.route('/clara', methods=['POST'])
-def conversar_com_clara():
-    # --- <<< ADICIONADO: Verificação de token para a API >>> ---
-    token = request.cookies.get("token_clara")
-    if not token or token not in TOKENS_VALIDOS:
-        print(f"API /clara: Acesso não autorizado (token: {token})")
-        return jsonify({'erro': 'Acesso não autorizado'}), 401 
-    # --- Fim da verificação ---
+    # Obter o histórico das últimas 5 mensagens
+    c.execute("SELECT sender, message FROM messages ORDER BY id DESC LIMIT 5")
+    history = c.fetchall()
+    conn.close()
 
-    data = request.get_json()
-    if not data: return jsonify({'erro': 'Requisição sem JSON'}), 400
-         
-    mensagem_usuario = data.get('mensagem') 
-    user_id = data.get('user_id') 
+    # Formatar o histórico para o prompt
+    history_text = "\n".join([f"{msg[0]}: {msg[1]}" for msg in history])
+    if not history_text:
+        history_text = "Nenhuma mensagem anterior."
 
-    if not mensagem_usuario: return jsonify({'erro': 'Campo "mensagem" não fornecido'}), 400
+    # Preparar o prompt para o Gemini API
+    current_time = get_current_time()
+    full_prompt = f"""
+    Horário atual: {current_time} (GMT-3)
 
-    print(f"API /clara: Recebida msg de user_id: {user_id} - Msg: {mensagem_usuario}")
+    Histórico da conversa:
+    {history_text}
 
-    try:
-        resposta_clara = gerar_resposta_clara(mensagem_usuario, user_id) 
-        try:
-            timestamp = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
-            conn = sqlite3.connect(DATABASE)
-            c = conn.cursor()
-            c.execute("INSERT INTO messages (sender, message, timestamp) VALUES (?, ?, ?)", ("Clara", resposta_clara, timestamp))
-            conn.commit()
-            conn.close()
-        except Exception as db_err: print(f"Erro DB /clara: {db_err}")
-        return jsonify({'resposta': resposta_clara}) 
+    {prompt_clara}
+    """
 
-    except Exception as e:
-        print(f"Erro gerar_resposta_clara: {e}")
-        return jsonify({'erro': 'Erro interno ao gerar resposta'}), 500
+    # Enviar requisição para o Gemini API
+    print("Enviando requisição pro Gemini API...")
+    headers = {
+        "Content-Type": "application/json",
+    }
+    data = {
+        "contents": [{
+            "parts": [{
+                "text": full_prompt
+            }]
+        }]
+    }
+    response = requests.post(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" + os.getenv("GEMINI_API_KEY"),
+        headers=headers,
+        json=data
+    )
 
-@app.route('/logout')
-def logout():
-    resp = make_response(redirect(url_for('login')))
-    resp.delete_cookie('token_clara') 
-    print("Usuário deslogado.")
-    return resp
+    if response.status_code == 200:
+        print("Resposta do Gemini API:", response.json())
+        clara_response = response.json()['candidates'][0]['content']['parts'][0]['text']
+        
+        # Salvar a resposta da Clara no banco de dados
+        timestamp = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
+        conn = sqlite3.connect('chat_history.db')
+        c = conn.cursor()
+        c.execute("INSERT INTO messages (sender, message, timestamp) VALUES (?, ?, ?)",
+                  ("Clara", clara_response, timestamp))
+        conn.commit()
+        conn.close()
 
-# --- Execução do App ---
+        return jsonify({'response': clara_response})
+    else:
+        return jsonify({'error': 'Erro ao processar a mensagem'}), 500
+
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000)) 
-    # debug=False recomendado para produção e para evitar problemas com scheduler
-    use_debug = os.environ.get("FLASK_DEBUG", "False") == "True"
-    app.run(host='0.0.0.0', port=port, debug=use_debug)
+    app.run(debug=True)
