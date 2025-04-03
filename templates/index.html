@@ -1,52 +1,73 @@
+<!-- ARQUIVO HTML FINAL (baseado no MELHORADO com adições do ATUAL) -->
 <!DOCTYPE html>
-<html lang="pt-BR">  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Clara - WhatsApp Style</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="{{ url_for('static', filename='js/chat.js') }}" defer></script>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <!-- Viewport do ATUAL (melhor para mobile) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Clara 💬</title>
+  <!-- Link para o CSS (vamos usar o MELHORADO como base) -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Link para Font Awesome (do ATUAL, necessário para ícones) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <div class="app-container">
-        <header>
-            <div class="header-left">
-                <button class="back-btn" aria-label="Voltar">  <i class="fas fa-arrow-left"></i>
-                </button>
-               <!-- Imagem de perfil com clique para ampliar -->
-<img id="profile-pic" src="/static/img/clara_avatar.png" alt="Clara" class="avatar">
+  <!-- Container principal do MELHORADO -->
+  <div class="chat-container">
 
-<!-- Modal para ampliar a imagem -->
-<div id="modal" class="modal">
-  <span class="close">&times;</span>
-  <img class="modal-content" id="modal-img">
-</div>
-
-                <div class="contact-info">
-                    <h1>Clara </h1>
-                    <p class="status">online</p>
-                </div>
-            </div>
-            <div class="header-right">
-                <button class="search-btn" aria-label="Pesquisar">  <i class="fas fa-search"></i>
-                </button>
-                <button class="more-btn" aria-label="Mais opções">  <i class="fas fa-ellipsis-vertical"></i>
-                </button>
-            </div>
-        </header>
-        
-        <main id="chat-box" class="chat-area">  </main>
-        
-        <form id="mensagem-form" class="input-container">
-            <div class="input-wrapper">
-                <button type="button" class="emoji-btn" aria-label="Escolher emoji">  <i class="far fa-smile"></i>
-                </button>
-                <input type="text" id="mensagem" name="mensagem" placeholder="Digite uma mensagem" required aria-label="Digite sua mensagem">  <button type="button" class="attach-btn" aria-label="Anexar arquivo">  <i class="fas fa-paperclip"></i>
-                </button>
-            </div>
-            <button type="submit" class="send-btn" aria-label="Enviar mensagem">  <i class="fas fa-microphone"></i>
+    <!-- Header do MELHORADO, mas com ID na imagem para o modal -->
+    <div class="chat-header">
+        <!-- Adicionado ID 'profile-pic' e alt text mais descritivo -->
+        <img id="profile-pic" src="/static/img/clara_avatar.png" alt="Avatar de Clara" class="clara-avatar">
+        <div class="header-info">
+          <div class="header-title">Clara 💕</div>
+          <!-- ID 'clara-status' mantido para a função 'digitando...' -->
+          <div class="header-status" id="clara-status">online</div>
+        </div>
+        <!-- ADICIONADO: Ícones do header do ATUAL (se desejar) -->
+        <div class="header-right" style="margin-left: auto; display: flex; gap: 20px;">
+            <button class="search-btn" aria-label="Pesquisar" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer;">
+                <i class="fas fa-search"></i>
             </button>
-        </form>
+            <button class="more-btn" aria-label="Mais opções" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer;">
+                <i class="fas fa-ellipsis-vertical"></i>
+            </button>
+        </div>
     </div>
+
+    <!-- ADICIONADO: Modal (copiado do ATUAL) - Colocado fora do fluxo principal -->
+    <div id="modal" class="modal" style="display: none;"> <!-- Estilo inline para garantir que comece escondido -->
+      <span class="close">×</span>
+      <img class="modal-content" id="modal-img">
+    </div>
+
+    <!-- Chat Box do MELHORADO -->
+    <div class="chat-box" id="chat-box">
+        <!-- As mensagens serão adicionadas aqui pelo JS -->
+    </div>
+
+    <!-- Input Area: Combinando estrutura do MELHORADO com botões do ATUAL -->
+    <!-- Usando <form> como no ATUAL para permitir envio com Enter semanticamente -->
+    <form id="mensagem-form" class="chat-input">
+        <!-- Botão Emoji (do ATUAL) -->
+        <button type="button" class="emoji-btn" aria-label="Escolher emoji" style="background: none; border: none; font-size: 22px; padding: 8px 12px; color: #555; cursor: pointer;">
+            <i class="far fa-smile"></i>
+        </button>
+        <!-- Input (do MELHORADO, mas com ID do ATUAL para JS) -->
+        <input type="text" id="mensagem" placeholder="Digite uma mensagem..." autocomplete="off" required aria-label="Digite sua mensagem">
+         <!-- Botão Anexar (do ATUAL) -->
+        <button type="button" class="attach-btn" aria-label="Anexar arquivo" style="background: none; border: none; font-size: 20px; padding: 8px 12px; color: #555; cursor: pointer; transform: rotate(45deg);">
+            <i class="fas fa-paperclip"></i>
+        </button>
+        <!-- Botão Enviar (adaptado para usar ícone e ID/classe para JS) -->
+        <button type="submit" id="send-btn" class="send-btn" aria-label="Enviar mensagem">
+            <!-- Ícone inicial (microfone), será trocado pelo JS -->
+            <i class="fas fa-microphone"></i>
+        </button>
+    </form>
+  </div>
+
+  <!-- Link para o JS (vamos criar um novo combinando os dois) -->
+  <script src="script_final.js"></script>
 </body>
 </html>
