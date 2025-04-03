@@ -31,7 +31,7 @@
 
         // Registra o Service Worker
         if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}") // Ou '/static/sw.js'
+            navigator.serviceWorker.register('/static/sw.js')
             .then((registration) => { console.log('Service Worker: Registrado com sucesso:', registration.scope); })
             .catch((error) => { console.error('Service Worker: Falha no registro:', error); });
         } else {
