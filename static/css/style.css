@@ -112,8 +112,13 @@ header {
     overflow: hidden;
     text-overflow: ellipsis;
     color: var(--status-online-color); /* Cor 'online' do novo CSS */
-    /* A cor para 'digitando...' pode ser a mesma ou definida via JS/classe específica */
+    transition: color 0.3s ease; /* Transição suave para typing */
 }
+.status.typing {
+    color: var(--status-typing-color); /* Cor quando está digitando (pode ser a mesma) */
+    /* font-style: italic; */ /* Opcional: itálico para 'digitando' */
+}
+
 
 /* Ícones no Header e Botões */
 header i {
@@ -183,37 +188,42 @@ header button {
 
 .message-content {
   /* O texto da mensagem fica aqui (criado via JS) */
-  /* Garante quebra de linha */
+  /* Garante quebra de linha e quebra de palavras */
    white-space: pre-wrap; 
    word-break: break-word;
 }
 
-/* Timestamp e Checkmarks (Precisa de wrapper para alinhar) */
+/* Container para Timestamp e Checkmarks */
 .message-footer {
     display: flex;
     justify-content: flex-end; /* Alinha à direita dentro do balão */
-    align-items: center;
-    margin-top: 4px;
-    height: 15px; /* Altura fixa para alinhamento */
+    align-items: center; /* Alinha verticalmente */
+    margin-top: 4px; /* Espaço acima */
+    height: 15px; /* Altura fixa para alinhamento vertical consistente */
 }
 
 .timestamp {
-    font-size: 11px; /* Menor */
-    color: var(--text-light);
+    font-size: 11px; /* Tamanho pequeno */
+    color: var(--text-light); /* Cor cinza */
     margin-right: 5px; /* Espaço antes dos checks */
+    white-space: nowrap; /* Evita quebra de linha */
 }
 
 .checkmarks {
     font-size: 12px; /* Tamanho dos checks */
-    color: var(--text-light); /* Cor padrão (enviado) */
+    color: var(--text-light); /* Cor padrão (enviado - cinza) */
+    white-space: nowrap; /* Evita quebra */
+    line-height: 1; /* Garante alinhamento vertical */
 }
 
-.checkmarks i {
-   margin-left: -2px; /* Ajuste fino para juntar os checks duplos */
+/* Para juntar os checks duplos visualmente */
+.checkmarks i + i {
+   margin-left: -3px; 
 }
 
+/* Cor quando lido (check duplo azul) */
 .checkmarks.read {
-    color: var(--checkmark-read-color); /* Cor lido (azul do novo CSS) */
+    color: var(--checkmark-read-color); 
 }
 
 
@@ -223,7 +233,7 @@ header button {
     padding: 8px 12px;
     padding-bottom: calc(8px + env(safe-area-inset-bottom)); /* Safe area */
     display: flex;
-    align-items: center;
+    align-items: center; /* Alinha itens verticalmente */
     gap: 8px;
     border-top: 1px solid #ddd;
     position: sticky;
@@ -234,7 +244,7 @@ header button {
 }
 
 .input-wrapper {
-    flex: 1;
+    flex: 1; /* Ocupa espaço */
     display: flex;
     align-items: center;
     background-color: var(--input-text-bg);
@@ -250,7 +260,7 @@ header button {
     padding: 10px 0; /* Padding vertical */
     font-size: 16px; /* Tamanho da fonte */
     background: transparent;
-    min-width: 0;
+    min-width: 0; /* Permite encolher */
     color: var(--text-dark);
 }
 
@@ -265,6 +275,9 @@ header button {
     padding: 8px; /* Área de clique */
     opacity: 0.8;
     transition: opacity 0.2s ease-in-out;
+    display: flex; /* Para centralizar ícone se necessário */
+    align-items: center;
+    justify-content: center;
 }
 
 .emoji-btn:hover,
@@ -284,12 +297,13 @@ header button {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    flex-shrink: 0;
+    flex-shrink: 0; /* Não encolhe */
     transition: background-color 0.2s ease-in-out;
 }
 
 .send-btn i {
     font-size: 20px; /* Tamanho do ícone */
+    display: block; /* Garante que o ícone ocupe o espaço */
 }
 
 .send-btn:hover {
@@ -304,7 +318,7 @@ header button {
     z-index: 9999;
     left: 0; top: 0;
     width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.8); /* Fundo escuro semi-transparente */
+    background-color: rgba(0, 0, 0, 0.85); /* Fundo escuro semi-transparente */
     justify-content: center;
     align-items: center;
 }
@@ -318,12 +332,16 @@ header button {
  
 .close {
     position: absolute;
-    top: 20px; right: 30px;
-    color: #fff; /* Branco */
-    font-size: 40px;
+    top: 15px; right: 25px; /* Posição ajustada */
+    color: #f1f1f1; /* Branco mais suave */
+    font-size: 45px; /* Maior */
     font-weight: bold;
     cursor: pointer;
     z-index: 10000;
+    transition: color 0.3s ease;
+}
+.close:hover {
+    color: #bbb; /* Feedback visual no hover */
 }
 
 /* Responsividade (Mantida e pode precisar de ajustes finos) */
@@ -336,18 +354,22 @@ header button {
         padding: 10px 12px;
         padding-top: calc(10px + env(safe-area-inset-top));
         gap: 8px;
+        min-height: 56px; /* Pouco menor */
     }
 
     .header-left { gap: 8px; }
     .header-right { gap: 15px; }
     .contact-info h1 { font-size: 16px; }
     .status { font-size: 11px; }
-    header i { font-size: 18px; }
+    header i { font-size: 18px; } /* Ícones header menores */
     
-    .input-wrapper { min-height: 40px; }
+    .input-container{ padding: 6px 10px; padding-bottom: calc(6px + env(safe-area-inset-bottom)); }
+    .input-wrapper { min-height: 40px; padding: 0 10px; }
     .emoji-btn, .attach-btn { font-size: 20px; padding: 6px; }
     .send-btn { width: 40px; height: 40px; }
     .send-btn i { font-size: 18px; }
+    .timestamp { font-size: 10px; } /* Timestamp menor ainda */
+    .checkmarks { font-size: 11px; }
 }
 
 /* Ajustes para Safe Area (Mantido) */

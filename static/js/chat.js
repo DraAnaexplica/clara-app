@@ -3,11 +3,12 @@
     'use strict'; // Habilita modo estrito para pegar erros comuns
 
     // Cache de elementos DOM frequentemente usados
-    let chatBox, messageInput, messageForm, sendBtn, claraStatusElement, profilePic, modal, modalImg, closeModalBtn;
+    let chatBox, messageInput, messageForm, sendBtn, claraStatusElement, 
+        profilePic, modal, modalImg, closeModalBtn;
 
-    // Função para inicializar tudo quando o DOM estiver pronto
+    // --- INICIALIZAÇÃO ---
     function init() {
-        // Seleciona os elementos uma vez
+        // Seleciona os elementos DOM essenciais uma vez
         chatBox = document.getElementById("chat-box");
         messageInput = document.getElementById("mensagem");
         messageForm = document.getElementById("mensagem-form");
@@ -16,254 +17,279 @@
         profilePic = document.getElementById("profile-pic");
         modal = document.getElementById("modal");
         modalImg = document.getElementById("modal-img");
-        closeModalBtn = document.querySelector(".modal .close"); // Seleciona o botão de fechar dentro do modal
+        closeModalBtn = document.querySelector(".modal .close"); 
 
-        // Verifica se os elementos essenciais existem antes de adicionar listeners
-        if (messageForm && messageInput && sendBtn) {
-            messageForm.addEventListener("submit", sendMessage);
-            messageInput.addEventListener("input", updateSendButton);
-            messageInput.addEventListener("keypress", handleEnterKey);
-            updateSendButton(); // Define o estado inicial do botão (microfone)
-        } else {
-            console.error("Elementos essenciais do formulário não encontrados!");
-            return; // Interrompe a inicialização se algo faltar
+        // Verifica se os elementos essenciais do formulário/chat existem
+        if (!chatBox || !messageInput || !messageForm || !sendBtn || !claraStatusElement) {
+             console.error("Erro: Elementos essenciais do chat não foram encontrados no DOM.");
+             return; // Interrompe a inicialização se algo crítico faltar
         }
+        
+        // Adiciona listeners do formulário e input
+        messageForm.addEventListener("submit", sendMessage);
+        messageInput.addEventListener("input", updateSendButton);
+        messageInput.addEventListener("keypress", handleEnterKey);
+        updateSendButton(); // Define o estado inicial do botão (microfone)
 
+        // Adiciona listeners do modal de perfil (se existir)
         if (profilePic && modal && modalImg && closeModalBtn) {
              profilePic.addEventListener("click", openProfileModal);
              closeModalBtn.addEventListener("click", closeProfileModal);
+             // Fecha modal se clicar no fundo escuro
              modal.addEventListener("click", function(event) {
-                // Fecha modal se clicar fora da imagem
                 if (event.target === modal) {
                     closeProfileModal();
                 }
              });
+        } else {
+            console.warn("Elementos do modal não encontrados. Funcionalidade de clique na foto desativada.");
         }
         
-        // Ajustes de layout (mantidos do JS original)
-        // Removido handleKeyboard com visualViewport pois pode ser complexo e buggy,
-        // confiar no CSS e comportamento padrão pode ser melhor inicialmente.
-        // Se o teclado cobrir o input, considerar reavaliar.
+        // Ajustes de layout na inicialização e em resize
         window.addEventListener('resize', adjustChatHeight);
         adjustChatHeight(); // Ajusta altura inicial
 
-        // Foco inicial no input
-        messageInput.focus();
-
-        // Exemplo: Enviar uma mensagem inicial de "Clara" se necessário
-        // displayMessage({ from: "her", text: "Olá! Como posso ajudar?" });
+        // Foco inicial no input (bom para desktop)
+        // Considerar remover ou ajustar para mobile se causar problemas com teclado abrindo automaticamente
+        messageInput.focus(); 
     }
 
-    // Gera ou recupera o user_id do localStorage (mantido)
+    // --- FUNÇÕES DE UTILIDADE ---
+
+    // Gera ou recupera um ID de usuário único (localStorage)
     function getUserId() {
         let userId = localStorage.getItem('user_id');
         if (!userId) {
-            userId = 'user-' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5); // ID um pouco mais robusto
-            localStorage.setItem('user_id', userId);
+            // Gera um ID mais robusto combinando timestamp e aleatório
+            userId = 'user-' + Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
+            try {
+                localStorage.setItem('user_id', userId);
+            } catch (e) {
+                console.error("Não foi possível salvar user_id no localStorage:", e);
+                // Retorna um ID temporário se localStorage falhar
+                return 'user-temp-' + Date.now().toString(36); 
+            }
         }
         return userId;
     }
 
-    // Formata a hora (mantido)
+    // Formata a hora atual para HH:MM (formato 24h)
     function formatTime(date = new Date()) {
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }); // formato 24h
+        // Fallback para caso toLocaleTimeString não funcione como esperado
+        try {
+            return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false });
+        } catch (e) {
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
     }
 
-    // Exibe mensagens (Refatorado para usar textContent e criar DOM)
+    // Rola a área de chat para a última mensagem
+    function scrollToBottom() {
+        if (chatBox) {
+            // Usar 'smooth' pode ter performance variável, 'auto' é mais confiável
+            chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'auto' }); 
+        }
+    }
+
+    // Atualiza o status da Clara (online/digitando)
+    function setTypingStatus(isTyping) {
+        if (claraStatusElement) {
+            claraStatusElement.classList.toggle('typing', isTyping); 
+            claraStatusElement.textContent = isTyping ? "digitando..." : "online"; 
+        }
+    }
+
+    // Atualiza o ícone do botão Enviar/Microfone
+    function updateSendButton() {
+        if (!sendBtn || !messageInput) return; 
+
+        if (messageInput.value.trim().length > 0) {
+            sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>'; // Ícone Enviar
+        } else {
+            sendBtn.innerHTML = '<i class="fas fa-microphone"></i>'; // Ícone Microfone
+        }
+    }
+    
+    // Ajusta a altura da área de chat dinamicamente
+    function adjustChatHeight() {
+        const header = document.querySelector('header'); 
+        const inputContainer = document.querySelector('.input-container'); 
+        
+        if (header && inputContainer && chatBox) {
+            const headerHeight = header.offsetHeight;
+            const inputHeight = inputContainer.offsetHeight;
+            // Define a altura do chat para preencher o espaço restante
+            chatBox.style.height = `calc(100vh - ${headerHeight}px - ${inputHeight}px)`;
+            // Considerar chamar scrollToBottom() aqui somente se a altura MUDOU significativamente
+        }
+    }
+
+    // --- LÓGICA PRINCIPAL DO CHAT ---
+
+    // Exibe uma mensagem na tela (usuário ou Clara)
     function displayMessage(message) {
-        if (!chatBox) return; // Verifica se chatBox existe
+        if (!chatBox || !message.text) return; // Não adiciona se não houver chatbox ou texto
 
         const msgDiv = document.createElement("div");
-        msgDiv.className = `message ${message.from}`; // 'me' ou 'her'
+        msgDiv.className = `message ${message.from}`; // Aplica classe 'me' ou 'her'
 
-        // Conteúdo da mensagem (Seguro com textContent)
+        // Cria o elemento para o conteúdo do texto
         const contentDiv = document.createElement("div");
         contentDiv.className = "message-content";
-        // Usa textContent para inserir o texto da mensagem com segurança
-        contentDiv.textContent = message.text; 
-        // Permite quebras de linha no texto (ex: \n) sejam exibidas
-        contentDiv.style.whiteSpace = 'pre-wrap'; 
-        contentDiv.style.wordBreak = 'break-word';
+        contentDiv.textContent = message.text; // Usa textContent para segurança
+        contentDiv.style.whiteSpace = 'pre-wrap'; // Preserva quebras de linha do texto
+        contentDiv.style.wordBreak = 'break-word'; // Quebra palavras longas
         msgDiv.appendChild(contentDiv);
 
-        // Container para timestamp e checks
+        // Cria o container para o rodapé da mensagem (timestamp e checks)
         const footerDiv = document.createElement("div");
         footerDiv.className = "message-footer";
 
-        // Timestamp
+        // Adiciona o timestamp
         const timeSpan = document.createElement("span");
         timeSpan.className = "timestamp";
         timeSpan.textContent = formatTime(); 
         footerDiv.appendChild(timeSpan);
 
-        // Checkmarks (Só para mensagens 'me')
+        // Adiciona os checkmarks SE a mensagem for do usuário ('me')
         if (message.from === "me") {
             const checkSpan = document.createElement("span");
             checkSpan.className = "checkmarks";
-            // Ícone inicial (pode ser um ou dois checks cinzas via CSS ou um aqui)
-            checkSpan.innerHTML = '<i class="fas fa-check"></i>'; 
+            checkSpan.innerHTML = '<i class="fas fa-check"></i>'; // Check inicial (enviado)
             footerDiv.appendChild(checkSpan);
 
-            // Simula mudança para lido (check duplo azul) após um tempo
-             // Guardar referência ao span de check para o timeout
+            // Simula a atualização para "lido" (check duplo azul)
+            // Em um app real, isso seria acionado por um evento do backend/outro usuário
             const checkmarkSpanForTimeout = checkSpan; 
             setTimeout(() => {
-                if (checkmarkSpanForTimeout) { // Verifica se ainda existe
+                // Verifica se o elemento ainda existe no DOM antes de modificar
+                if (checkmarkSpanForTimeout && chatBox.contains(checkmarkSpanForTimeout)) { 
                     checkmarkSpanForTimeout.innerHTML = '<i class="fas fa-check-double"></i>'; 
                     checkmarkSpanForTimeout.classList.add('read'); 
                 }
-            }, 1500); // Tempo da simulação (ajuste se quiser)
+            }, 1500 + Math.random() * 1000); // Tempo de simulação um pouco variável
         }
         
-        msgDiv.appendChild(footerDiv); // Adiciona o rodapé (timestamp/checks)
-        chatBox.appendChild(msgDiv);
-        scrollToBottom(); // Rola para o final
+        msgDiv.appendChild(footerDiv); // Adiciona o rodapé completo à mensagem
+        chatBox.appendChild(msgDiv); // Adiciona a mensagem ao chat
+        scrollToBottom(); // Garante que a nova mensagem seja visível
     }
 
-    // Rola para o final do chat (mantido)
-    function scrollToBottom() {
-        if (chatBox) {
-            // Usar 'smooth' pode ser bom, mas 'auto' é mais garantido
-            chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'auto' }); 
-        }
-    }
-
-    // Envia mensagem (Refatorado com async/await, typing indicator)
+    // Função assíncrona para enviar a mensagem
     async function sendMessage(event) {
-        if (event) event.preventDefault(); // Previne recarregamento da página
-        
-        if (!messageInput) return; // Verifica se input existe
+        if (event) event.preventDefault(); // Impede o envio padrão do formulário
+        if (!messageInput) return; // Sai se o input não existir
 
-        const message = messageInput.value.trim();
-        if (message === "") return; // Não envia mensagem vazia
+        const messageText = messageInput.value.trim();
+        if (messageText === "") return; // Não faz nada se a mensagem estiver vazia
+
+        const currentUserId = getUserId(); // Pega o ID do usuário
         
-        const userId = getUserId(); // Pega o user ID
+        // Mostra a mensagem do usuário na tela imediatamente
+        displayMessage({ from: "me", text: messageText }); 
         
-        // Exibe a mensagem do usuário imediatamente
-        displayMessage({ from: "me", text: message }); 
-        
-        // Limpa o input e atualiza o botão
+        // Limpa o campo de input, atualiza o botão e tira o foco (esconde teclado mobile)
         messageInput.value = "";
         updateSendButton(); 
-        // messageInput.focus(); // Re-focar pode ser irritante em mobile, opcional
+        messageInput.blur(); // <--- CORREÇÃO DO TECLADO
 
-        setTypingStatus(true); // LIGA o "digitando..."
+        setTypingStatus(true); // Mostra "digitando..."
 
         try {
-            // Usa o endpoint relativo (melhor para Flask)
-            const response = await fetch("/clara", { 
+            // Faz a requisição para o backend
+            const response = await fetch("/clara", { // Endpoint relativo (ajuste se necessário)
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                // Usa a estrutura de body esperada pelo seu backend original
-                body: JSON.stringify({ mensagem: message, user_id: userId }) 
+                headers: { 
+                    "Content-Type": "application/json",
+                    // Adicionar outros headers se necessário (ex: autenticação)
+                },
+                // Body no formato esperado pelo backend original
+                body: JSON.stringify({ mensagem: messageText, user_id: currentUserId }) 
             });
 
-            // Verifica se a resposta HTTP foi bem-sucedida (status 2xx)
+            // Verifica se a resposta da requisição foi bem-sucedida
             if (!response.ok) { 
-                // Tenta pegar mais detalhes do erro se o backend enviar
-                let errorMsg = `Erro HTTP: ${response.status}`;
+                let errorDetail = response.statusText; // Detalhe padrão do erro HTTP
+                // Tenta obter uma mensagem de erro mais específica do corpo da resposta JSON
                 try {
                     const errorData = await response.json();
-                    errorMsg = errorData.error || errorMsg; // Usa msg de erro do backend se disponível
-                } catch (e) { /* Ignora erro ao parsear corpo do erro */ }
-                throw new Error(errorMsg);
+                    errorDetail = errorData.error || errorData.message || errorDetail;
+                } catch (e) { /* Falha ao ler corpo do erro, usa o statusText */ }
+                // Lança um erro para ser pego pelo bloco catch
+                throw new Error(`Erro ${response.status}: ${errorDetail}`); 
             }
 
+            // Converte a resposta bem-sucedida para JSON
             const data = await response.json();
 
-            // Simular um pequeno delay da resposta (opcional)
-            // await new Promise(resolve => setTimeout(resolve, Math.random() * 500 + 200)); 
+            // Simula um delay na resposta para parecer mais natural (opcional)
+            // await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 400)); 
 
-            // Exibe a resposta de "Clara"
+            // Exibe a resposta da Clara
+            // Usa a chave 'resposta' do JSON retornado pelo backend original
             displayMessage({ 
                 from: "her", 
-                // Usa a chave de resposta esperada pelo JS original
-                text: data.resposta || "Não recebi uma resposta válida." 
+                text: data.resposta || "Hmm, não entendi bem o que dizer agora." // Fallback
             });
 
         } catch (error) {
-            console.error("Erro ao enviar/receber mensagem:", error);
-            // Exibe uma mensagem de erro no chat
+            // Captura erros da rede ou erros lançados (response.ok === false)
+            console.error("Falha na comunicação com a API:", error);
+            // Mostra uma mensagem de erro amigável no chat
             displayMessage({ 
                 from: "her", 
-                text: `⚠️ ${error.message || "Ocorreu um erro na comunicação."}` 
+                text: `⚠️ Ops! ${error.message || "Tive um problema para me conectar."}` 
             });
         } finally {
-            // Garante que o status "digitando" seja desativado, mesmo se houver erro
-            setTypingStatus(false); // DESLIGA o "digitando..."
+            // Este bloco SEMPRE executa, com sucesso ou erro
+            setTypingStatus(false); // Garante que "digitando..." seja desativado
         }
     }
 
-    // Atualiza o botão enviar/microfone (mantido, ajustado para pegar sendBtn cacheado)
-    function updateSendButton() {
-        if (!sendBtn || !messageInput) return; // Verifica se existem
+    // --- HANDLERS DE EVENTOS ADICIONAIS ---
 
-        if (messageInput.value.trim().length > 0) {
-            // Muda para ícone de enviar (avião de papel)
-            sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
-            // sendBtn.style.backgroundColor = 'var(--button-send-bg)'; // Cor já definida no CSS
-        } else {
-            // Muda para ícone de microfone
-            sendBtn.innerHTML = '<i class="fas fa-microphone"></i>';
-            // sendBtn.style.backgroundColor = 'var(--button-send-bg)'; // Cor já definida no CSS
-        }
-    }
-
-    // Atualiza o status da Clara no topo (nova função)
-    function setTypingStatus(isTyping) {
-        if (claraStatusElement) { // Verifica se o elemento existe
-            // Adiciona/remove uma classe para estilização opcional via CSS
-            claraStatusElement.classList.toggle('typing', isTyping); 
-            // Define o texto
-            claraStatusElement.textContent = isTyping ? "digitando..." : "online"; 
-        }
-    }
-
-    // Função para lidar com a tecla Enter (nova função)
+    // Lida com a tecla Enter pressionada no input
     function handleEnterKey(event) {
-        // Verifica se foi Enter E se o Shift NÃO estava pressionado
+        // Verifica se foi Enter E se Shift NÃO estava pressionado (permite Shift+Enter para nova linha)
         if (event.key === "Enter" && !event.shiftKey) { 
-            event.preventDefault(); // Impede o comportamento padrão (nova linha, submit padrão)
+            event.preventDefault(); // Impede o comportamento padrão do Enter (nova linha, etc.)
             
-            // Dispara o evento de submit do formulário para chamar nossa função `sendMessage`
+            // Dispara o evento de 'submit' no formulário, acionando a função sendMessage
             if (messageForm) {
-                // Cria e dispara um evento de submit que pode ser cancelado
-                const submitEvent = new Event('submit', { cancelable: true, bubbles: true });
-                messageForm.dispatchEvent(submitEvent);
+                // Usar requestSubmit() é mais moderno, mas dispatchEvent é mais compatível
+                messageForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
             }
         }
     }
 
-    // Ajusta a altura da área de chat (mantido, ajustado para pegar elementos cacheados)
-    function adjustChatHeight() {
-        const header = document.querySelector('header'); // Pode cachear se não mudar
-        const inputContainer = document.querySelector('.input-container'); // Pode cachear
-        
-        if (header && inputContainer && chatBox) {
-            const headerHeight = header.offsetHeight;
-            const inputHeight = inputContainer.offsetHeight;
-            // Calcula altura restante
-            chatBox.style.height = `calc(100vh - ${headerHeight}px - ${inputHeight}px)`;
-            // scrollToBottom(); // Rolar aqui pode ser excessivo em cada resize
-        }
-    }
-
-    // Funções do Modal (mantidas, ajustadas para pegar elementos cacheados)
+    // Abre o modal da foto de perfil
     function openProfileModal() {
         if (modal && modalImg && profilePic) {
-            modalImg.src = profilePic.src; // Define a imagem do modal
-            modal.style.display = "flex"; // Usa flex para centralizar (definido no CSS)
+            modalImg.src = profilePic.src; 
+            modal.style.display = "flex"; // Usa 'flex' para habilitar centralização via CSS
+            // Adicionar Acessibilidade: Travar foco no modal aqui seria ideal
         }
     }
 
+    // Fecha o modal da foto de perfil
     function closeProfileModal() {
         if (modal) {
-            modal.style.display = "none"; // Oculta o modal
+            modal.style.display = "none"; 
+             // Adicionar Acessibilidade: Retornar foco para o elemento que abriu o modal
         }
     }
 
-    // Event listener para carregar o DOM e iniciar o script
-    document.addEventListener("DOMContentLoaded", init);
+    // --- INICIALIZAÇÃO DO SCRIPT ---
 
-})(); // Fim da IIFE
+    // Garante que o DOM esteja carregado antes de executar o init
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        // DOM já carregado, executa imediatamente
+        init();
+    }
+
+})(); // Fim da IIFE (Immediately Invoked Function Expression)
 
