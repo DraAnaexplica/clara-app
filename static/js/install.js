@@ -1,29 +1,29 @@
 let deferredPrompt = null;
 
-// Captura o evento disparado quando o app é instalável
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  console.log('✅ Evento beforeinstallprompt capturado');
+  console.log('✅ beforeinstallprompt capturado');
 
-  // Mostra o botão se o DOM já estiver carregado
-  if (document.readyState === 'complete') {
-    mostrarBotaoInstalacaoSeDisponivel();
-  } else {
-    window.addEventListener('DOMContentLoaded', mostrarBotaoInstalacaoSeDisponivel);
+  // Mostrar automaticamente ao entrar no app
+  mostrarBotaoInstalacao();
+});
+
+// Garante exibição mesmo se o DOM ainda não estiver pronto
+document.addEventListener('DOMContentLoaded', () => {
+  if (deferredPrompt) {
+    mostrarBotaoInstalacao();
   }
 });
 
-// Mostra o botão de instalação se as condições forem atendidas
-function mostrarBotaoInstalacaoSeDisponivel() {
-  const installBtn = document.getElementById('installBtn');
-  if (deferredPrompt && installBtn) {
-    installBtn.style.display = 'block';
+function mostrarBotaoInstalacao() {
+  const btn = document.getElementById('installBtn');
+  if (btn) {
+    btn.style.display = 'block';
     console.log('📲 Botão de instalação exibido');
   }
 }
 
-// Executa a instalação ao clicar no botão
 function installApp() {
   if (!deferredPrompt) return;
 
@@ -31,15 +31,15 @@ function installApp() {
 
   deferredPrompt.userChoice.then((choiceResult) => {
     if (choiceResult.outcome === 'accepted') {
-      console.log('👍 Usuário aceitou instalar');
+      console.log('👍 App será instalado');
     } else {
-      console.log('👎 Usuário recusou instalar');
+      console.log('👎 Usuário recusou');
     }
 
     deferredPrompt = null;
-    document.getElementById('installBtn').style.display = 'none';
+    const btn = document.getElementById('installBtn');
+    if (btn) btn.style.display = 'none';
   });
 }
 
-// Expor função no escopo global (HTML usa no onclick)
 window.installApp = installApp;
