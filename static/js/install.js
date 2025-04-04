@@ -3,43 +3,27 @@ let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  console.log('✅ beforeinstallprompt capturado');
-
-  // Mostrar automaticamente ao entrar no app
-  mostrarBotaoInstalacao();
+  console.log('✅ Evento beforeinstallprompt capturado');
+  mostrarBotao();
 });
 
-// Garante exibição mesmo se o DOM ainda não estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
-  if (deferredPrompt) {
-    mostrarBotaoInstalacao();
-  }
+  if (deferredPrompt) mostrarBotao();
 });
 
-function mostrarBotaoInstalacao() {
+function mostrarBotao() {
   const btn = document.getElementById('installBtn');
-  if (btn) {
-    btn.style.display = 'block';
-    console.log('📲 Botão de instalação exibido');
-  }
+  if (btn) btn.style.display = 'block';
 }
 
 function installApp() {
   if (!deferredPrompt) return;
-
   deferredPrompt.prompt();
-
   deferredPrompt.userChoice.then((choiceResult) => {
     if (choiceResult.outcome === 'accepted') {
-      console.log('👍 App será instalado');
-    } else {
-      console.log('👎 Usuário recusou');
+      console.log('App instalado');
     }
-
     deferredPrompt = null;
-    const btn = document.getElementById('installBtn');
-    if (btn) btn.style.display = 'none';
+    document.getElementById('installBtn').style.display = 'none';
   });
 }
-
-window.installApp = installApp;

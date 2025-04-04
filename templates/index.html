@@ -1,71 +1,22 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Clara - Chat</title> 
-
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-    <!-- Emoji Picker Web Component -->
-    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script> 
-
-    <!-- JS principal do app -->
-    <script src="{{ url_for('static', filename='js/chat.js') }}" defer></script>
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clara</title>
 </head>
 <body>
-    <div class="app-container">
-        <header>
-            <div class="header-left">
-                <button class="back-btn" aria-label="Voltar"><i class="fas fa-arrow-left"></i></button>
-                <img id="profile-pic" src="/static/img/clara_avatar.png" alt="Clara" class="avatar">
-
-                <div id="modal" class="modal">
-                    <span class="close">&times;</span>
-                    <img class="modal-content" id="modal-img">
-                </div>
-
-                <div class="contact-info">
-                    <h1>Clara</h1>
-                    <p class="status" id="clara-status">online</p> 
-                </div>
-            </div>
-            <div class="header-right">
-                <button class="search-btn" aria-label="Pesquisar"><i class="fas fa-search"></i></button>
-                <button class="more-btn" aria-label="Mais opções"><i class="fas fa-ellipsis-vertical"></i></button>
-            </div>
-        </header>
-
-        <main id="chat-box" class="chat-area"></main>
-
-        <form id="mensagem-form" class="input-container">
-            <div class="input-wrapper">
-                <button type="button" class="emoji-btn" aria-label="Escolher emoji"><i class="far fa-smile"></i></button>
-                <input type="text" id="mensagem" name="mensagem" placeholder="Digite uma mensagem" required aria-label="Digite sua mensagem" autocomplete="off">
-                <button type="button" class="attach-btn" aria-label="Anexar arquivo"><i class="fas fa-paperclip"></i></button>
-            </div>
-            <button type="submit" class="send-btn" aria-label="Enviar mensagem"><i class="fas fa-microphone"></i></button>
-        </form>
-    </div>
-
-    <!-- Botão de Instalação do PWA -->
-    <button id="installBtn" onclick="installApp()" style="display:none; position:fixed; bottom:20px; right:20px; z-index:1000;">
-        Instalar Aplicativo
-    </button>
-
-    <!-- Registro do Service Worker -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/static/js/service-worker.js')
-                .then(() => console.log('✅ Service Worker registrado com sucesso'))
-                .catch(err => console.error('❌ Erro ao registrar Service Worker:', err));
-        }
-    </script>
-
-    <!-- Script do botão de instalação -->
-    <script src="{{ url_for('static', filename='js/install.js') }}"></script>
+  <h1>Bem-vindo ao App Clara</h1>
+  <p>Status: online</p>
+  <button id="installBtn" onclick="installApp()" style="display:none;">Instalar Aplicativo</button>
+  <p><a href="/logout">Sair</a></p>
+  <script src="{{ url_for('static', filename='js/install.js') }}"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/static/js/service-worker.js')
+        .then(() => console.log('SW registrado com sucesso'));
+    }
+  </script>
 </body>
 </html>
