@@ -1,14 +1,21 @@
-let deferredPrompt;
+let deferredPrompt = null;
 
+// Captura o evento disparado pelo navegador quando o app é "instalável"
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  const installBtn = document.getElementById('installBtn');
-  if (installBtn) {
-    installBtn.style.display = 'block';
-  }
+  console.log('✅ Evento beforeinstallprompt capturado');
 });
 
+// Mostra o botão de instalação se o evento foi capturado
+function mostrarBotaoInstalacaoSeDisponivel() {
+  const installBtn = document.getElementById('installBtn');
+  if (deferredPrompt && installBtn) {
+    installBtn.style.display = 'block';
+  }
+}
+
+// Executa a instalação quando o botão for clicado
 function installApp() {
   if (!deferredPrompt) return;
 
@@ -20,7 +27,12 @@ function installApp() {
     } else {
       console.log('Usuário recusou instalar');
     }
+
     deferredPrompt = null;
     document.getElementById('installBtn').style.display = 'none';
   });
 }
+
+// Disponibiliza as funções no escopo global
+window.mostrarBotaoInstalacaoSeDisponivel = mostrarBotaoInstalacaoSeDisponivel;
+window.installApp = installApp;

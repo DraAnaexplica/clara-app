@@ -185,6 +185,10 @@
         const currentUserId = getUserId(); 
         
         displayMessage({ from: "me", text: messageText }); 
+        if (window.mostrarBotaoInstalacaoSeDisponivel) {
+            window.mostrarBotaoInstalacaoSeDisponivel();
+          }
+          
         
         messageInput.value = "";
         updateSendButton(); 
