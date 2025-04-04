@@ -1,7 +1,6 @@
 let deferredPrompt;
 const installBtn = document.getElementById('installBtn');
 
-// Captura o evento quando o app é considerado instalável
 window.addEventListener('beforeinstallprompt', (e) => {
   console.log("✅ Evento beforeinstallprompt capturado");
   e.preventDefault();
