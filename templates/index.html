@@ -53,11 +53,10 @@
         </form>
     </div>
 
-<!-- Botão de Instalação -->
-<button id="installBtn" onclick="installApp()" style="display:none; position:fixed; bottom:20px; right:20px; z-index:1000;">
-  Instalar Aplicativo
+<!-- Botão de Instalação PWA -->
+<button id="installBtn" style="display:none; position:fixed; bottom:20px; right:20px; z-index:1000;">
+    Instalar Aplicativo
 </button>
-
 
 <script>
   if ('serviceWorker' in navigator) {
@@ -66,7 +65,7 @@
       .catch(err => console.error('❌ Erro ao registrar Service Worker:', err));
   }
 </script>
-<script src="/static/js/install.js"></script>
-
+<script src="{{ url_for('static', filename='js/install.js') }}"></script>
 </body>
+
 </html>
