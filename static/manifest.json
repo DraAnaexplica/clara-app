@@ -1,5 +1,5 @@
 {
-    "name": "CLARA AI",
+    "name": "CLARA_AI",
     "short_name": "Clara",
     "start_url": "/",
     "display": "standalone",
@@ -7,12 +7,12 @@
     "theme_color": "#2196f3",
     "icons": [
       {
-        "src": "/static/img/clara_avatar.png",
+        "src": "/static/icons/icon-192.png",
         "sizes": "192x192",
         "type": "image/png"
       },
       {
-        "src": "/static/img/clara_avatar.png",
+        "src": "/static/icons/icon-512.png",
         "sizes": "512x512",
         "type": "image/png"
       }
