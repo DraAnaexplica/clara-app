@@ -52,20 +52,5 @@
             </button>
         </form>
     </div>
-
-<!-- Botão de Instalação PWA -->
-<button id="installBtn" style="display:none; position:fixed; bottom:20px; right:20px; z-index:1000;">
-    Instalar Aplicativo
-</button>
-
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/static/js/service-worker.js')
-      .then(() => console.log('✅ Service Worker registrado'))
-      .catch(err => console.error('❌ Erro ao registrar Service Worker:', err));
-  }
-</script>
-<script src="{{ url_for('static', filename='js/install.js') }}"></script>
 </body>
-
 </html>
