@@ -1,29 +1,24 @@
-let deferredPrompt = null;
+let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
 
+// Captura o evento quando o app é considerado instalável
 window.addEventListener('beforeinstallprompt', (e) => {
+  console.log("✅ Evento beforeinstallprompt capturado");
   e.preventDefault();
   deferredPrompt = e;
-  console.log('✅ Evento beforeinstallprompt capturado');
-  mostrarBotao();
-});
+  installBtn.style.display = 'block';
 
-document.addEventListener('DOMContentLoaded', () => {
-  if (deferredPrompt) mostrarBotao();
-});
-
-function mostrarBotao() {
-  const btn = document.getElementById('installBtn');
-  if (btn) btn.style.display = 'block';
-}
-
-function installApp() {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  deferredPrompt.userChoice.then((choiceResult) => {
-    if (choiceResult.outcome === 'accepted') {
-      console.log('App instalado');
+  installBtn.addEventListener('click', () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('📲 Usuário aceitou a instalação');
+        } else {
+          console.log('❌ Usuário recusou a instalação');
+        }
+        deferredPrompt = null;
+      });
     }
-    deferredPrompt = null;
-    document.getElementById('installBtn').style.display = 'none';
   });
-}
+});
