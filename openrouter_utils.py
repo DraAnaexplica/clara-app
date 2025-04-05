@@ -72,12 +72,36 @@ def gerar_resposta_clara(mensagem_usuario, user_id="local_user"):
     init_db()
     save_message(user_id, "Usuário", mensagem_usuario)
 
-    # 🧠 Extração de memória
+    # 🧠 Extração e salvamento de memórias
     novas_memorias = extrair_memoria(mensagem_usuario)
     if novas_memorias:
         print("🧠 Novas memórias detectadas:", novas_memorias)
         salvar_memorias(user_id, novas_memorias)
 
+    # 🧠 Resposta direta baseada em memória
+    msg_lower = mensagem_usuario.lower()
+    perguntas_diretas = [
+        "o que eu gosto",
+        "qual meu",
+        "você lembra do que eu gosto",
+        "você lembra o que eu gosto",
+        "lembra do que eu gosto"
+    ]
+    if any(p in msg_lower for p in perguntas_diretas):
+        memorias = obter_memorias(user_id)
+        if memorias:
+            # Tenta buscar uma memória que fale de "gosto de"
+            for mem in memorias:
+                if "gosta de" in mem.lower() or "gosto de" in mem.lower():
+                    resposta_direta = f"Claro que lembro, amor... você me disse que {mem.lower()} 😘"
+                    save_message(user_id, "Clara", resposta_direta)
+                    return resposta_direta
+            # Se nenhuma for relevante, usa a última mesmo
+            resposta_direta = f"Hmm... se eu não tô maluca, você me falou que {memorias[-1].lower()} 😏"
+            save_message(user_id, "Clara", resposta_direta)
+            return resposta_direta
+
+    # Dados pra gerar o prompt dinâmico
     fuso_horario = pytz.timezone("America/Sao_Paulo")
     horario_atual = datetime.now(fuso_horario).strftime("%H:%M")
 
@@ -123,6 +147,5 @@ def gerar_resposta_clara(mensagem_usuario, user_id="local_user"):
     except Exception as e:
         print("❌ Erro ao processar resposta da Clara:", str(e))
         return "⚠️ A Clara teve um problema técnico. Tenta de novo?"
-
 
 
