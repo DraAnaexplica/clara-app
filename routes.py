@@ -7,9 +7,25 @@ from token_backup_utils import exportar_tokens, importar_tokens
 app = Flask(__name__)
 
 # ========================
+# BANCO DE TOKENS - CRIA SE NÃO EXISTIR
+# ========================
+def init_tokens_db():
+    conn = sqlite3.connect("tokens.db")
+    c = conn.cursor()
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS tokens (
+            token TEXT PRIMARY KEY,
+            expira_em TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+init_tokens_db()
+
+# ========================
 # VALIDAÇÃO DE TOKEN
 # ========================
-
 def validar_token(token):
     conn = sqlite3.connect("tokens.db")
     c = conn.cursor()
@@ -25,7 +41,6 @@ def validar_token(token):
 # ========================
 # ROTAS DO USUÁRIO
 # ========================
-
 @app.route('/login', methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -60,7 +75,6 @@ def conversar_com_clara():
 # ========================
 # PAINEL DE CONTROLE
 # ========================
-
 @app.route('/painel', methods=["GET", "POST"])
 def painel():
     conn = sqlite3.connect("tokens.db")
@@ -102,7 +116,6 @@ def excluir_token():
 # ========================
 # BACKUP / IMPORTAÇÃO
 # ========================
-
 @app.route('/exportar_tokens')
 def exportar():
     if exportar_tokens():
@@ -118,6 +131,6 @@ def importar():
 # ========================
 # RODAR APP
 # ========================
-
 if __name__ == '__main__':
     app.run(debug=True)
+
