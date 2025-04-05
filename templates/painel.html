@@ -2,47 +2,66 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Painel de Controle - Clara</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Painel de Controle - Tokens</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            padding: 30px;
+            background-color: #f8f9fa;
+        }
+        h2 {
+            margin-bottom: 20px;
+        }
+        .form-inline .form-control {
+            margin-right: 10px;
+        }
+    </style>
 </head>
-<body class="bg-light">
-<div class="container py-5">
-    <h2 class="mb-4">Painel de Controle - Tokens</h2>
+<body>
+    <div class="container">
+        <h2>Painel de Controle - Tokens</h2>
 
-    <form action="/criar_token" method="post" class="d-flex mb-4 gap-2">
-        <input type="text" name="token" class="form-control" placeholder="Novo token" required>
-        <input type="date" name="expira_em" class="form-control" required>
-        <button type="submit" class="btn btn-success">Criar Token</button>
-    </form>
+        <!-- FORMULÁRIO DE CRIAÇÃO -->
+        <form method="POST" action="/painel" class="form-inline d-flex mb-4">
+            <input type="text" name="novo_token" class="form-control me-2" placeholder="Novo token" required>
+            <input type="date" name="expira_em" class="form-control me-2" required>
+            <button type="submit" class="btn btn-success">Criar Token</button>
+        </form>
 
-    <table class="table table-bordered bg-white">
-        <thead>
-            <tr>
-                <th>Token</th>
-                <th>Expira em</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for token in tokens %}
-            <tr>
-                <td>{{ token[0] }}</td>
-                <td>{{ token[1] }}</td>
-                <td>
-                    <form action="/editar_token" method="post" class="d-inline">
-                        <input type="hidden" name="token" value="{{ token[0] }}">
-                        <input type="date" name="nova_data" value="{{ token[1] }}" required>
-                        <button class="btn btn-primary btn-sm">Atualizar</button>
-                    </form>
-                    <form action="/excluir_token" method="post" class="d-inline ms-2">
-                        <input type="hidden" name="token" value="{{ token[0] }}">
-                        <button class="btn btn-danger btn-sm">Excluir</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+        <!-- TABELA DE TOKENS -->
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Token</th>
+                    <th>Expira em</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for token, expira_em in tokens %}
+                <tr>
+                    <td>{{ token }}</td>
+                    <td>{{ expira_em }}</td>
+                    <td>
+                        <form action="/atualizar_token" method="POST" class="d-inline-flex">
+                            <input type="hidden" name="token" value="{{ token }}">
+                            <input type="date" name="nova_data" class="form-control me-2" value="{{ expira_em }}" required>
+                            <button type="submit" class="btn btn-primary me-1">Atualizar</button>
+                        </form>
+                        <form action="/excluir_token" method="POST" class="d-inline">
+                            <input type="hidden" name="token" value="{{ token }}">
+                            <button type="submit" class="btn btn-danger">Excluir</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" class="text-center">Nenhum token encontrado.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>
+
