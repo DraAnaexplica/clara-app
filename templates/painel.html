@@ -34,14 +34,16 @@
                 <tr>
                     <th>Token</th>
                     <th>Expira em</th>
+                    <th>User ID</th>
                     <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
-                {% for token, expira_em in tokens %}
+                {% for token, expira_em, user_id in tokens %}
                 <tr>
                     <td>{{ token }}</td>
                     <td>{{ expira_em }}</td>
+                    <td>{{ user_id or "—" }}</td>
                     <td>
                         <form action="/atualizar_token" method="POST" class="d-inline-flex">
                             <input type="hidden" name="token" value="{{ token }}">
@@ -56,7 +58,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="3" class="text-center">Nenhum token encontrado.</td>
+                    <td colspan="4" class="text-center">Nenhum token encontrado.</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -64,4 +66,5 @@
     </div>
 </body>
 </html>
+
 
