@@ -1,22 +1,13 @@
 import os
 import requests
 import sqlite3
-import importlib
 from datetime import datetime
 import pytz
 from dotenv import load_dotenv
-from claraprompt import prompt_clara
-print("✅ Prompt carregado (primeiras linhas):")
-print(prompt_clara[:500])
-
-prompt_module = importlib.import_module("claraprompt")
-prompt_clara = prompt_module.prompt_clara
+from prompt_builder import build_prompt
 
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "").replace('\n', '').replace('\r', '').strip()
-
-
-print("🔑 OPENROUTER_API_KEY:", OPENROUTER_API_KEY)
 
 
 def init_db():
@@ -33,6 +24,7 @@ def init_db():
     conn.commit()
     conn.close()
 
+
 def save_message(user_id, sender, message):
     conn = sqlite3.connect("chat_history.db")
     c = conn.cursor()
@@ -42,6 +34,7 @@ def save_message(user_id, sender, message):
     conn.commit()
     conn.close()
 
+
 def get_history(user_id):
     conn = sqlite3.connect("chat_history.db")
     c = conn.cursor()
@@ -50,34 +43,35 @@ def get_history(user_id):
     conn.close()
     return history
 
-def gerar_resposta_clara(mensagem_usuario, user_id=""):
+
+def gerar_resposta_clara(mensagem_usuario, user_id="local_user"):
     if not OPENROUTER_API_KEY:
         print("Erro: OPENROUTER_API_KEY não configurada!")
         return "⚠️ A Clara não conseguiu responder agora. Tenta mais tarde?"
 
     init_db()
-    if user_id:
-        save_message(user_id, "Usuário", mensagem_usuario)
+    save_message(user_id, "Usuário", mensagem_usuario)
 
     fuso_horario = pytz.timezone("America/Sao_Paulo")
     horario_atual = datetime.now(fuso_horario).strftime("%H:%M")
 
-    mensagens_formatadas = [
-        { "role": "system", "content": prompt_clara }
+    historico = get_history(user_id)
+    history_text = "\n".join([f"{s}: {m}" for s, m in reversed(historico)])
+
+    nome_usuario = "André"
+    estado = "normal"
+    memorias = [
+        "Ele gosta de carinho antes de dormir",
+        "Trabalha como motorista de app",
+        "Fica carente no fim da noite"
     ]
 
-    if user_id:
-        historico = get_history(user_id)
-        for sender, msg in reversed(historico):
-            mensagens_formatadas.append({
-                "role": "user" if sender.lower() == "usuário" else "assistant",
-                "content": msg
-            })
+    prompt = build_prompt(nome_usuario, estado, memorias, historico=history_text, hora=horario_atual)
 
-    mensagens_formatadas.append({
-        "role": "user",
-        "content": f"{mensagem_usuario}\n(Horário atual: {horario_atual})"
-    })
+    mensagens_formatadas = [
+        { "role": "system", "content": prompt },
+        { "role": "user", "content": mensagem_usuario }
+    ]
 
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
@@ -91,22 +85,20 @@ def gerar_resposta_clara(mensagem_usuario, user_id=""):
     }
 
     try:
-        print("Enviando requisição pro OpenRouter...")
+        print("📤 Enviando prompt:")
+        print(prompt)
         response = requests.post(url, headers=headers, json=data, timeout=10)
         resposta = response.json()
-        print("📨 Resposta da API completa:", resposta)  # 👈 Aqui pegamos o retorno bruto da IA
 
-        reply = resposta["choices"][0]["message"]["content"]
-
-        if user_id:
+        if "choices" in resposta and "message" in resposta["choices"][0]:
+            reply = resposta["choices"][0]["message"]["content"]
             save_message(user_id, "Clara", reply)
-
-        return reply
-
-    except requests.Timeout:
-        print("⏱️ Timeout na requisição pro OpenRouter")
-        return "⏱️ A Clara demorou demais pra responder. Tenta de novo?"
+            return reply
+        else:
+            print("⚠️ Estrutura inesperada na resposta:", resposta)
+            return "⚠️ A Clara travou um pouco. Tenta de novo?"
 
     except Exception as e:
-        print("❌ Erro ao processar resposta da Clara:", str(e), resposta if 'resposta' in locals() else "Sem resposta")
+        print("❌ Erro ao processar resposta da Clara:", str(e))
         return "⚠️ A Clara teve um problema técnico. Tenta de novo?"
+
