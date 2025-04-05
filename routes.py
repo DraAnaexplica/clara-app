@@ -6,9 +6,8 @@ from openrouter_utils import gerar_resposta_clara
 app = Flask(__name__)
 
 # ========================
-# CRIAR BANCO DE TOKENS SE NÃO EXISTIR
+# CRIAR BANCO DE TOKENS
 # ========================
-
 def criar_banco_tokens():
     conn = sqlite3.connect("tokens.db")
     c = conn.cursor()
@@ -21,12 +20,11 @@ def criar_banco_tokens():
     conn.commit()
     conn.close()
 
-criar_banco_tokens()  # Executa ao iniciar
+criar_banco_tokens()
 
 # ========================
-# VALIDAÇÃO DE TOKEN
+# VALIDAR TOKEN
 # ========================
-
 def validar_token(token):
     conn = sqlite3.connect("tokens.db")
     c = conn.cursor()
@@ -40,9 +38,8 @@ def validar_token(token):
     return False
 
 # ========================
-# ROTAS DO USUÁRIO
+# ROTAS DE USUÁRIO
 # ========================
-
 @app.route('/login', methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -67,7 +64,6 @@ def index():
 def conversar_com_clara():
     data = request.get_json()
     mensagem = data.get('mensagem')
-
     if not mensagem:
         return jsonify({'erro': 'Mensagem não fornecida'}), 400
 
@@ -77,7 +73,6 @@ def conversar_com_clara():
 # ========================
 # PAINEL DE CONTROLE
 # ========================
-
 @app.route('/painel', methods=["GET", "POST"])
 def painel():
     conn = sqlite3.connect("tokens.db")
@@ -119,6 +114,5 @@ def excluir_token():
 # ========================
 # RODAR APP
 # ========================
-
 if __name__ == '__main__':
     app.run(debug=True)
