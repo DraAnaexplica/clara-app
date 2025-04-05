@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template, redirect, url_for, make_response
 import datetime
 import sqlite3
+import os  # 👈 AGORA SIM, IMPORTADO
 from openrouter_utils import gerar_resposta_clara
 
 app = Flask(__name__)
@@ -28,6 +29,7 @@ criar_banco_tokens()  # Executa ao iniciar
 # ========================
 
 def validar_token(token):
+    print("📍 tokens.db ABSOLUTO:", os.path.abspath("tokens.db"))
     conn = sqlite3.connect("tokens.db")
     c = conn.cursor()
     c.execute("SELECT expira_em FROM tokens WHERE token = ?", (token,))
