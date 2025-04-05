@@ -22,6 +22,12 @@ def init_db():
             timestamp TEXT
         )
     """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS user_memories (
+            user_id TEXT,
+            memoria TEXT
+        )
+    """)
     conn.commit()
     conn.close()
 
@@ -85,8 +91,8 @@ def gerar_resposta_clara(mensagem_usuario, user_id="local_user"):
     prompt = build_prompt(nome_usuario, estado, memorias, historico=history_text, hora=horario_atual)
 
     mensagens_formatadas = [
-        { "role": "system", "content": prompt },
-        { "role": "user", "content": mensagem_usuario }
+        {"role": "system", "content": prompt},
+        {"role": "user", "content": mensagem_usuario}
     ]
 
     url = "https://openrouter.ai/api/v1/chat/completions"
@@ -117,5 +123,6 @@ def gerar_resposta_clara(mensagem_usuario, user_id="local_user"):
     except Exception as e:
         print("❌ Erro ao processar resposta da Clara:", str(e))
         return "⚠️ A Clara teve um problema técnico. Tenta de novo?"
+
 
 
