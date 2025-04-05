@@ -5,6 +5,7 @@ from datetime import datetime
 import pytz
 from dotenv import load_dotenv
 from prompt_builder import build_prompt
+from memories import extrair_memoria, salvar_memorias, obter_memorias
 
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "").replace('\n', '').replace('\r', '').strip()
@@ -46,17 +47,14 @@ def get_history(user_id):
 
 def detectar_estado(mensagem):
     mensagem = mensagem.lower()
-
     palavras_sexuais = [
         "gostosa", "delícia", "safada", "tesão", "tô com vontade",
         "me deixa louco", "gozar", "meter", "gemer", "gozo",
         "transar", "nua", "gozando", "vc me deixa doido", "com tesão"
     ]
-
     for palavra in palavras_sexuais:
         if palavra in mensagem:
             return "sexual"
-
     return "normal"
 
 
@@ -68,6 +66,12 @@ def gerar_resposta_clara(mensagem_usuario, user_id="local_user"):
     init_db()
     save_message(user_id, "Usuário", mensagem_usuario)
 
+    # 🧠 Extração de memória
+    novas_memorias = extrair_memoria(mensagem_usuario)
+    if novas_memorias:
+        print("🧠 Novas memórias detectadas:", novas_memorias)
+        salvar_memorias(user_id, novas_memorias)
+
     fuso_horario = pytz.timezone("America/Sao_Paulo")
     horario_atual = datetime.now(fuso_horario).strftime("%H:%M")
 
@@ -76,11 +80,7 @@ def gerar_resposta_clara(mensagem_usuario, user_id="local_user"):
 
     nome_usuario = "André"
     estado = detectar_estado(mensagem_usuario)
-    memorias = [
-        "Ele gosta de carinho antes de dormir",
-        "Trabalha como motorista de app",
-        "Fica carente no fim da noite"
-    ]
+    memorias = obter_memorias(user_id)
 
     prompt = build_prompt(nome_usuario, estado, memorias, historico=history_text, hora=horario_atual)
 
@@ -101,7 +101,7 @@ def gerar_resposta_clara(mensagem_usuario, user_id="local_user"):
     }
 
     try:
-        print("📤 Enviando prompt:")
+        print("📤 Enviando prompt (estado:", estado, ")")
         print(prompt)
         response = requests.post(url, headers=headers, json=data, timeout=10)
         resposta = response.json()
