@@ -1,67 +1,61 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
+    <title>Painel de Tokens</title>
     <meta charset="UTF-8">
-    <title>Painel de Controle - Tokens</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <style>
-        body {
-            padding: 30px;
-            background-color: #f8f9fa;
-        }
-        h2 {
-            margin-bottom: 20px;
-        }
-        .form-inline .form-control {
-            margin-right: 10px;
-        }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Painel de Controle - Tokens</h2>
+    <h2>🔐 Painel de Controle - Tokens</h2>
 
-        <!-- FORMULÁRIO DE CRIAÇÃO -->
-        <form method="POST" action="/painel" class="form-inline d-flex mb-4">
-            <input type="text" name="novo_token" class="form-control me-2" placeholder="Novo token" required>
-            <input type="date" name="expira_em" class="form-control me-2" required>
-            <button type="submit" class="btn btn-success">Criar Token</button>
-        </form>
+    <form method="POST" action="/painel">
+        <input type="text" name="novo_token" placeholder="Novo Token" required>
+        <input type="date" name="expira_em" required>
+        <button type="submit">➕ Adicionar Token</button>
+    </form>
 
-        <!-- TABELA DE TOKENS -->
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Token</th>
-                    <th>Expira em</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for token, expira_em in tokens %}
-                <tr>
-                    <td>{{ token }}</td>
-                    <td>{{ expira_em }}</td>
-                    <td>
-                        <form action="/atualizar_token" method="POST" class="d-inline-flex">
-                            <input type="hidden" name="token" value="{{ token }}">
-                            <input type="date" name="nova_data" class="form-control me-2" value="{{ expira_em }}" required>
-                            <button type="submit" class="btn btn-primary me-1">Atualizar</button>
-                        </form>
-                        <form action="/excluir_token" method="POST" class="d-inline">
-                            <input type="hidden" name="token" value="{{ token }}">
-                            <button type="submit" class="btn btn-danger">Excluir</button>
-                        </form>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="3" class="text-center">Nenhum token encontrado.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+    <br><br>
+
+    <table border="1" cellpadding="8">
+        <thead>
+            <tr>
+                <th>Token</th>
+                <th>Expira em</th>
+                <th>Atualizar</th>
+                <th>Excluir</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for token, expira_em in tokens %}
+            <tr>
+                <td>{{ token }}</td>
+                <td>{{ expira_em }}</td>
+                <td>
+                    <form method="POST" action="/atualizar_token">
+                        <input type="hidden" name="token" value="{{ token }}">
+                        <input type="date" name="nova_data" required>
+                        <button type="submit">💾 Atualizar</button>
+                    </form>
+                </td>
+                <td>
+                    <form method="POST" action="/excluir_token">
+                        <input type="hidden" name="token" value="{{ token }}">
+                        <button type="submit">🗑️ Excluir</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <br><br>
+
+    <form action="/exportar_tokens" method="get" style="display:inline;">
+        <button type="submit">📤 Exportar Tokens</button>
+    </form>
+
+    <form action="/importar_tokens" method="get" style="display:inline;">
+        <button type="submit">📥 Importar Tokens</button>
+    </form>
 </body>
 </html>
 

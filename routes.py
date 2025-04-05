@@ -2,26 +2,9 @@ from flask import Flask, request, jsonify, render_template, redirect, url_for, m
 import datetime
 import sqlite3
 from openrouter_utils import gerar_resposta_clara
+from token_backup_utils import exportar_tokens, importar_tokens
 
 app = Flask(__name__)
-
-# ========================
-# CRIAR BANCO DE TOKENS SE NÃO EXISTIR
-# ========================
-
-def criar_banco_tokens():
-    conn = sqlite3.connect("tokens.db")
-    c = conn.cursor()
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS tokens (
-            token TEXT PRIMARY KEY,
-            expira_em TEXT
-        )
-    """)
-    conn.commit()
-    conn.close()
-
-criar_banco_tokens()  # Executa ao iniciar
 
 # ========================
 # VALIDAÇÃO DE TOKEN
@@ -115,6 +98,22 @@ def excluir_token():
     conn.commit()
     conn.close()
     return redirect("/painel")
+
+# ========================
+# BACKUP / IMPORTAÇÃO
+# ========================
+
+@app.route('/exportar_tokens')
+def exportar():
+    if exportar_tokens():
+        return "✅ Tokens exportados para tokens_backup.json"
+    return "❌ Erro ao exportar."
+
+@app.route('/importar_tokens')
+def importar():
+    if importar_tokens():
+        return "✅ Tokens importados com sucesso."
+    return "⚠️ Arquivo tokens_backup.json não encontrado."
 
 # ========================
 # RODAR APP
