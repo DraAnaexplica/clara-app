@@ -44,6 +44,22 @@ def get_history(user_id):
     return history
 
 
+def detectar_estado(mensagem):
+    mensagem = mensagem.lower()
+
+    palavras_sexuais = [
+        "gostosa", "delícia", "safada", "tesão", "tô com vontade",
+        "me deixa louco", "gozar", "meter", "gemer", "gozo",
+        "transar", "nua", "gozando", "vc me deixa doido", "com tesão"
+    ]
+
+    for palavra in palavras_sexuais:
+        if palavra in mensagem:
+            return "sexual"
+
+    return "normal"
+
+
 def gerar_resposta_clara(mensagem_usuario, user_id="local_user"):
     if not OPENROUTER_API_KEY:
         print("Erro: OPENROUTER_API_KEY não configurada!")
@@ -59,7 +75,7 @@ def gerar_resposta_clara(mensagem_usuario, user_id="local_user"):
     history_text = "\n".join([f"{s}: {m}" for s, m in reversed(historico)])
 
     nome_usuario = "André"
-    estado = "normal"
+    estado = detectar_estado(mensagem_usuario)
     memorias = [
         "Ele gosta de carinho antes de dormir",
         "Trabalha como motorista de app",
@@ -101,4 +117,5 @@ def gerar_resposta_clara(mensagem_usuario, user_id="local_user"):
     except Exception as e:
         print("❌ Erro ao processar resposta da Clara:", str(e))
         return "⚠️ A Clara teve um problema técnico. Tenta de novo?"
+
 
