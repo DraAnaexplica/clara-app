@@ -7,6 +7,9 @@ from dotenv import load_dotenv
 from prompt_builder import build_prompt
 from memories import extrair_memoria, salvar_memorias, obter_memorias
 
+load_dotenv()
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "").replace('\n', '').replace('\r', '').strip()
+
 
 def init_db():
     conn = sqlite3.connect("chat_history.db")
@@ -62,12 +65,8 @@ def detectar_estado(mensagem):
 
 
 def gerar_resposta_clara(mensagem_usuario, user_id="local_user"):
-    # Carrega a chave da API sempre que a função for chamada
-    load_dotenv()
-    OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "").strip()
-
     if not OPENROUTER_API_KEY:
-        print("❌ Erro: OPENROUTER_API_KEY não configurada!")
+        print("Erro: OPENROUTER_API_KEY não configurada!")
         return "⚠️ A Clara não conseguiu responder agora. Tenta mais tarde?"
 
     init_db()
@@ -91,15 +90,18 @@ def gerar_resposta_clara(mensagem_usuario, user_id="local_user"):
     if any(p in msg_lower for p in perguntas_diretas):
         memorias = obter_memorias(user_id)
         if memorias:
+            # Tenta buscar uma memória que fale de "gosto de"
             for mem in memorias:
                 if "gosta de" in mem.lower() or "gosto de" in mem.lower():
                     resposta_direta = f"Claro que lembro, amor... você me disse que {mem.lower()} 😘"
                     save_message(user_id, "Clara", resposta_direta)
                     return resposta_direta
+            # Se nenhuma for relevante, usa a última mesmo
             resposta_direta = f"Hmm... se eu não tô maluca, você me falou que {memorias[-1].lower()} 😏"
             save_message(user_id, "Clara", resposta_direta)
             return resposta_direta
 
+    # Dados pra gerar o prompt dinâmico
     fuso_horario = pytz.timezone("America/Sao_Paulo")
     horario_atual = datetime.now(fuso_horario).strftime("%H:%M")
 
