@@ -6,11 +6,29 @@ from openrouter_utils import gerar_resposta_clara
 app = Flask(__name__)
 
 # ========================
+# CRIAR BANCO DE TOKENS SE NÃO EXISTIR
+# ========================
+
+def criar_banco_tokens():
+    conn = sqlite3.connect("tokens.db")
+    c = conn.cursor()
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS tokens (
+            token TEXT PRIMARY KEY,
+            expira_em TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+criar_banco_tokens()  # Executa ao iniciar
+
+# ========================
 # VALIDAÇÃO DE TOKEN
 # ========================
 
 def validar_token(token):
-    conn = sqlite3.connect("tokens.db")  # OBS: banco tokens separado do chat, como combinamos
+    conn = sqlite3.connect("tokens.db")
     c = conn.cursor()
     c.execute("SELECT expira_em FROM tokens WHERE token = ?", (token,))
     resultado = c.fetchone()
