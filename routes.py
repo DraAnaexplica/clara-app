@@ -30,7 +30,6 @@ def index():
         return redirect(url_for("login"))
     return render_template("index.html")
 
-
 @app.route('/clara', methods=['POST'])
 def conversar_com_clara():
     data = request.get_json()
@@ -39,7 +38,8 @@ def conversar_com_clara():
     if not mensagem:
         return jsonify({'erro': 'Mensagem não fornecida'}), 400
 
-    resposta = gerar_resposta_clara(mensagem)
+    token = request.cookies.get("token_clara", "anon")
+    resposta = gerar_resposta_clara(mensagem, user_id=token)
     return jsonify({'resposta': resposta})
 
 if __name__ == '__main__':
