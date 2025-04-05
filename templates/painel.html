@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel de Controle - Clara</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container py-5">
+    <h2 class="mb-4">Painel de Controle - Tokens</h2>
+
+    <form action="/criar_token" method="post" class="d-flex mb-4 gap-2">
+        <input type="text" name="token" class="form-control" placeholder="Novo token" required>
+        <input type="date" name="expira_em" class="form-control" required>
+        <button type="submit" class="btn btn-success">Criar Token</button>
+    </form>
+
+    <table class="table table-bordered bg-white">
+        <thead>
+            <tr>
+                <th>Token</th>
+                <th>Expira em</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for token in tokens %}
+            <tr>
+                <td>{{ token[0] }}</td>
+                <td>{{ token[1] }}</td>
+                <td>
+                    <form action="/editar_token" method="post" class="d-inline">
+                        <input type="hidden" name="token" value="{{ token[0] }}">
+                        <input type="date" name="nova_data" value="{{ token[1] }}" required>
+                        <button class="btn btn-primary btn-sm">Atualizar</button>
+                    </form>
+                    <form action="/excluir_token" method="post" class="d-inline ms-2">
+                        <input type="hidden" name="token" value="{{ token[0] }}">
+                        <button class="btn btn-danger btn-sm">Excluir</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
