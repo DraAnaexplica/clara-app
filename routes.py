@@ -2,14 +2,14 @@ from flask import Flask, request, jsonify, render_template, redirect, url_for, m
 import datetime
 import sqlite3
 from openrouter_utils import gerar_resposta_clara
-from token_backup_utils import exportar_tokens, importar_tokens
 
 app = Flask(__name__)
 
 # ========================
-# BANCO DE TOKENS - CRIA SE NÃO EXISTIR
+# CRIAR BANCO DE TOKENS SE NÃO EXISTIR
 # ========================
-def init_tokens_db():
+
+def criar_banco_tokens():
     conn = sqlite3.connect("tokens.db")
     c = conn.cursor()
     c.execute("""
@@ -21,11 +21,12 @@ def init_tokens_db():
     conn.commit()
     conn.close()
 
-init_tokens_db()
+criar_banco_tokens()  # Executa ao iniciar
 
 # ========================
 # VALIDAÇÃO DE TOKEN
 # ========================
+
 def validar_token(token):
     conn = sqlite3.connect("tokens.db")
     c = conn.cursor()
@@ -41,6 +42,7 @@ def validar_token(token):
 # ========================
 # ROTAS DO USUÁRIO
 # ========================
+
 @app.route('/login', methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -75,6 +77,7 @@ def conversar_com_clara():
 # ========================
 # PAINEL DE CONTROLE
 # ========================
+
 @app.route('/painel', methods=["GET", "POST"])
 def painel():
     conn = sqlite3.connect("tokens.db")
@@ -114,23 +117,8 @@ def excluir_token():
     return redirect("/painel")
 
 # ========================
-# BACKUP / IMPORTAÇÃO
-# ========================
-@app.route('/exportar_tokens')
-def exportar():
-    if exportar_tokens():
-        return "✅ Tokens exportados para tokens_backup.json"
-    return "❌ Erro ao exportar."
-
-@app.route('/importar_tokens')
-def importar():
-    if importar_tokens():
-        return "✅ Tokens importados com sucesso."
-    return "⚠️ Arquivo tokens_backup.json não encontrado."
-
-# ========================
 # RODAR APP
 # ========================
+
 if __name__ == '__main__':
     app.run(debug=True)
-
