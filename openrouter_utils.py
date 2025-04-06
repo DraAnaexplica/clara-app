@@ -126,7 +126,7 @@ def gerar_resposta_clara(mensagem_usuario, user_id="local_user"):
     }
 
     data = {
-        "model": "mistralai/mistral-nemo:free",
+        "model": "deepseek/deepseek-chat-v3-0324:free",
         "messages": mensagens_formatadas
     }
 
