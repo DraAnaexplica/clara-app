@@ -126,7 +126,7 @@ def gerar_resposta_clara(mensagem_usuario, user_id="local_user"):
     }
 
     data = {
-        "model": "gryphe/mythomax-l2-13b",
+        "model": "mistralai/mistral-nemo:free",
         "messages": mensagens_formatadas
     }
 
