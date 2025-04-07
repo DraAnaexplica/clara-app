@@ -1,67 +1,76 @@
 from flask import Flask, request, jsonify, render_template, redirect, url_for, make_response
 import datetime
-import sqlite3
 import os
-from openrouter_utils import gerar_resposta_clara
+import psycopg2
+from dotenv import load_dotenv
 from datetime import date
+from openrouter_utils import gerar_resposta_clara
+
+# Carrega variáveis do .env local (útil para testes)
+load_dotenv()
 
 app = Flask(__name__)
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "tokens.db")
+# URL de conexão com o PostgreSQL (vem das variáveis de ambiente do Render)
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    print("❌ DATABASE_URL não definida!")
 
-def criar_banco_tokens():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
+# Função para obter conexão com PostgreSQL
+def get_db_connection():
+    try:
+        return psycopg2.connect(DATABASE_URL)
+    except Exception as e:
+        print(f"❌ Erro ao conectar ao PostgreSQL: {e}")
+        return None
 
-    c.execute("PRAGMA table_info(tokens)")
-    colunas = [col[1] for col in c.fetchall()]
-
-    if 'descricao' not in colunas:
-        print("📛 Estrutura antiga detectada. Recriando tabela tokens...")
-
-        try:
-            c.execute("ALTER TABLE tokens RENAME TO tokens_antigo")
-
-            c.execute("""
-                CREATE TABLE tokens (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+# Cria a tabela se não existir
+def criar_tabela_tokens_pg():
+    conn = get_db_connection()
+    if not conn:
+        return
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS tokens (
+                    id SERIAL PRIMARY KEY,
                     token TEXT UNIQUE NOT NULL,
                     descricao TEXT,
-                    criado_em TEXT DEFAULT CURRENT_TIMESTAMP,
-                    expira_em TEXT NOT NULL,
-                    ativo INTEGER DEFAULT 1
-                )
+                    criado_em TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+                    expira_em DATE NOT NULL,
+                    ativo BOOLEAN DEFAULT TRUE
+                );
             """)
-
-            c.execute("""
-                INSERT INTO tokens (token, expira_em)
-                SELECT token, expira_em FROM tokens_antigo
-            """)
-            c.execute("DROP TABLE tokens_antigo")
             conn.commit()
-            print("✅ Tabela tokens atualizada com sucesso.")
-        except Exception as e:
-            print("❌ Erro ao migrar tabela:", e)
-    else:
-        print("✅ Tabela tokens já está atualizada.")
+            print("✅ Tabela 'tokens' criada/verificada.")
+    except Exception as e:
+        print(f"❌ Erro ao criar/verificar tabela: {e}")
+        conn.rollback()
+    finally:
+        conn.close()
 
-    conn.close()
+criar_tabela_tokens_pg()
 
-criar_banco_tokens()
-
+# Verifica se o token é válido
 def validar_token(token):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("SELECT expira_em, ativo FROM tokens WHERE token = ?", (token,))
-    resultado = c.fetchone()
-    conn.close()
+    conn = get_db_connection()
+    if not conn:
+        return False
+
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT expira_em, ativo FROM tokens WHERE token = %s", (token,))
+            resultado = cur.fetchone()
+    except Exception as e:
+        print(f"❌ Erro ao validar token: {e}")
+        return False
+    finally:
+        conn.close()
 
     if resultado:
-        expira_em_str, ativo = resultado
+        expira_em, ativo = resultado
         if not ativo:
             return False
-        expira_em = datetime.datetime.strptime(expira_em_str, "%Y-%m-%d").date()
         return expira_em >= datetime.date.today()
     return False
 
@@ -98,48 +107,68 @@ def conversar_com_clara():
 
 @app.route('/painel', methods=["GET", "POST"])
 def painel():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
+    conn = get_db_connection()
+    if not conn:
+        return "Erro ao conectar ao banco de dados", 500
 
-    if request.method == "POST":
-        descricao = request.form.get("descricao")
-        expira_em = request.form.get("expira_em")
-        token = request.form.get("novo_token")
-        if token and expira_em:
-            c.execute("""
-                INSERT INTO tokens (token, expira_em, descricao, ativo)
-                VALUES (?, ?, ?, 1)
-            """, (token, expira_em, descricao))
-            conn.commit()
+    try:
+        if request.method == "POST":
+            descricao = request.form.get("descricao")
+            expira_em = request.form.get("expira_em")
+            token = request.form.get("novo_token")
+            if token and expira_em:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        INSERT INTO tokens (token, expira_em, descricao, ativo)
+                        VALUES (%s, %s, %s, TRUE)
+                    """, (token, expira_em, descricao))
+                    conn.commit()
 
-    c.execute("SELECT token, expira_em, descricao FROM tokens ORDER BY expira_em")
-    tokens = c.fetchall()
-    conn.close()
+        with conn.cursor() as cur:
+            cur.execute("SELECT token, expira_em, descricao FROM tokens ORDER BY expira_em")
+            tokens = cur.fetchall()
+    except Exception as e:
+        print(f"❌ Erro ao acessar painel: {e}")
+        return "Erro ao acessar painel", 500
+    finally:
+        conn.close()
 
-    # ✅ LOG DE DEPURAÇÃO
     print("📋 Tokens no painel:", tokens)
-
     return render_template("painel.html", tokens=tokens, now=date.today())
 
 @app.route('/atualizar_token', methods=["POST"])
 def atualizar_token():
     token = request.form.get("token")
     nova_data = request.form.get("nova_data")
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("UPDATE tokens SET expira_em = ? WHERE token = ?", (nova_data, token))
-    conn.commit()
-    conn.close()
+    conn = get_db_connection()
+    if not conn:
+        return redirect("/painel")
+    try:
+        with conn.cursor() as cur:
+            cur.execute("UPDATE tokens SET expira_em = %s WHERE token = %s", (nova_data, token))
+            conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"❌ Erro ao atualizar token: {e}")
+    finally:
+        conn.close()
     return redirect("/painel")
 
 @app.route('/excluir_token', methods=["POST"])
 def excluir_token():
     token = request.form.get("token")
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("DELETE FROM tokens WHERE token = ?", (token,))
-    conn.commit()
-    conn.close()
+    conn = get_db_connection()
+    if not conn:
+        return redirect("/painel")
+    try:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM tokens WHERE token = %s", (token,))
+            conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"❌ Erro ao excluir token: {e}")
+    finally:
+        conn.close()
     return redirect("/painel")
 
 @app.route("/api/registrar_token", methods=["POST"])
@@ -156,23 +185,28 @@ def registrar_token():
     if not token or not expira_em:
         return jsonify({"erro": "Dados incompletos"}), 400
 
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"erro": "Erro ao conectar ao banco"}), 500
+
     try:
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute("""
-            INSERT INTO tokens (token, expira_em, descricao, ativo)
-            VALUES (?, ?, ?, 1)
-        """, (token, expira_em, descricao))
-        conn.commit()
-        conn.close()
-
-        # ✅ LOG DE DEPURAÇÃO
-        print("✅ Token salvo via API:", token, expira_em, descricao)
-
-        return jsonify({"status": "salvo com sucesso"})
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO tokens (token, expira_em, descricao, ativo)
+                VALUES (%s, %s, %s, TRUE)
+            """, (token, expira_em, descricao))
+            conn.commit()
+            print(f"✅ Token salvo via API: {token}")
+            return jsonify({"status": "salvo com sucesso"})
+    except psycopg2.errors.UniqueViolation:
+        conn.rollback()
+        return jsonify({"erro": "Este token já existe."}), 409
     except Exception as e:
+        conn.rollback()
         print("❌ Erro ao salvar token:", e)
-        return jsonify({"erro": f"Erro ao salvar token: {str(e)}"}), 500
+        return jsonify({"erro": f"Erro inesperado: {str(e)}"}), 500
+    finally:
+        conn.close()
 
 if __name__ == '__main__':
     app.run(debug=True)
