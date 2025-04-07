@@ -6,17 +6,13 @@ from dotenv import load_dotenv
 from datetime import date
 from openrouter_utils import gerar_resposta_clara
 
-# Carrega variáveis do .env local (útil para testes)
 load_dotenv()
-
 app = Flask(__name__)
 
-# URL de conexão com o PostgreSQL (vem das variáveis de ambiente do Render)
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     print("❌ DATABASE_URL não definida!")
 
-# Função para obter conexão com PostgreSQL
 def get_db_connection():
     try:
         return psycopg2.connect(DATABASE_URL)
@@ -24,7 +20,6 @@ def get_db_connection():
         print(f"❌ Erro ao conectar ao PostgreSQL: {e}")
         return None
 
-# Cria a tabela se não existir
 def criar_tabela_tokens_pg():
     conn = get_db_connection()
     if not conn:
@@ -51,12 +46,10 @@ def criar_tabela_tokens_pg():
 
 criar_tabela_tokens_pg()
 
-# Verifica se o token é válido
 def validar_token(token):
     conn = get_db_connection()
     if not conn:
         return False
-
     try:
         with conn.cursor() as cur:
             cur.execute("SELECT expira_em, ativo FROM tokens WHERE token = %s", (token,))
@@ -66,7 +59,6 @@ def validar_token(token):
         return False
     finally:
         conn.close()
-
     if resultado:
         expira_em, ativo = resultado
         if not ativo:
@@ -98,10 +90,8 @@ def index():
 def conversar_com_clara():
     data = request.get_json()
     mensagem = data.get('mensagem')
-
     if not mensagem:
         return jsonify({'erro': 'Mensagem não fornecida'}), 400
-
     resposta = gerar_resposta_clara(mensagem)
     return jsonify({'resposta': resposta})
 
@@ -110,7 +100,6 @@ def painel():
     conn = get_db_connection()
     if not conn:
         return "Erro ao conectar ao banco de dados", 500
-
     try:
         if request.method == "POST":
             descricao = request.form.get("descricao")
@@ -123,7 +112,6 @@ def painel():
                         VALUES (%s, %s, %s, TRUE)
                     """, (token, expira_em, descricao))
                     conn.commit()
-
         with conn.cursor() as cur:
             cur.execute("SELECT token, expira_em, descricao FROM tokens ORDER BY expira_em")
             tokens = cur.fetchall()
@@ -132,7 +120,6 @@ def painel():
         return "Erro ao acessar painel", 500
     finally:
         conn.close()
-
     print("📋 Tokens no painel:", tokens)
     return render_template("painel.html", tokens=tokens, now=date.today())
 
@@ -178,17 +165,13 @@ def registrar_token():
     expira_em = data.get("expira_em")
     descricao = data.get("descricao", "")
     api_key = data.get("api_key")
-
     if api_key != os.getenv("TOKEN_API_KEY", ""):
         return jsonify({"erro": "Chave de API inválida"}), 403
-
     if not token or not expira_em:
         return jsonify({"erro": "Dados incompletos"}), 400
-
     conn = get_db_connection()
     if not conn:
         return jsonify({"erro": "Erro ao conectar ao banco"}), 500
-
     try:
         with conn.cursor() as cur:
             cur.execute("""
@@ -208,6 +191,4 @@ def registrar_token():
     finally:
         conn.close()
 
-if __name__ == '__main__':
-    app.run(debug=True)
 
