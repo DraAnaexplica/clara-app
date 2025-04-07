@@ -3,23 +3,23 @@ import datetime
 import sqlite3
 import os
 from openrouter_utils import gerar_resposta_clara
+from datetime import date
 
 app = Flask(__name__)
 
 # ========================
-# CAMINHO DO BANCO
+# CAMINHO ABSOLUTO DO BANCO
 # ========================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "tokens.db")
 
 # ========================
-# CRIAÇÃO OU MIGRAÇÃO DA TABELA TOKENS
+# CRIAR OU MIGRAR BANCO DE TOKENS
 # ========================
 def criar_banco_tokens():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # Verifica se a coluna 'descricao' existe
     c.execute("PRAGMA table_info(tokens)")
     colunas = [col[1] for col in c.fetchall()]
 
@@ -44,7 +44,6 @@ def criar_banco_tokens():
                 INSERT INTO tokens (token, expira_em)
                 SELECT token, expira_em FROM tokens_antigo
             """)
-
             c.execute("DROP TABLE tokens_antigo")
             conn.commit()
             print("✅ Tabela tokens atualizada com sucesso.")
@@ -58,7 +57,7 @@ def criar_banco_tokens():
 criar_banco_tokens()
 
 # ========================
-# FUNÇÃO DE VALIDAÇÃO DE TOKEN
+# VALIDAÇÃO DE TOKEN
 # ========================
 def validar_token(token):
     conn = sqlite3.connect(DB_PATH)
@@ -110,7 +109,7 @@ def conversar_com_clara():
     return jsonify({'resposta': resposta})
 
 # ========================
-# PAINEL DE CONTROLE DE TOKENS
+# PAINEL DE CONTROLE
 # ========================
 @app.route('/painel', methods=["GET", "POST"])
 def painel():
@@ -131,7 +130,7 @@ def painel():
     c.execute("SELECT token, expira_em, descricao FROM tokens ORDER BY expira_em")
     tokens = c.fetchall()
     conn.close()
-    return render_template("painel.html", tokens=tokens)
+    return render_template("painel.html", tokens=tokens, now=date.today())
 
 @app.route('/atualizar_token', methods=["POST"])
 def atualizar_token():
@@ -155,7 +154,7 @@ def excluir_token():
     return redirect("/painel")
 
 # ========================
-# API EXTERNA PARA REGISTRAR TOKEN
+# API EXTERNA PARA CRIAÇÃO DE TOKENS
 # ========================
 @app.route("/api/registrar_token", methods=["POST"])
 def registrar_token():
