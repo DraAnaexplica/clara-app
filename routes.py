@@ -7,15 +7,9 @@ from datetime import date
 
 app = Flask(__name__)
 
-# ========================
-# CAMINHO ABSOLUTO DO BANCO
-# ========================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "tokens.db")
 
-# ========================
-# CRIAR OU MIGRAR BANCO DE TOKENS
-# ========================
 def criar_banco_tokens():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -56,9 +50,6 @@ def criar_banco_tokens():
 
 criar_banco_tokens()
 
-# ========================
-# VALIDAÇÃO DE TOKEN
-# ========================
 def validar_token(token):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -74,9 +65,6 @@ def validar_token(token):
         return expira_em >= datetime.date.today()
     return False
 
-# ========================
-# ROTAS DE LOGIN E INDEX
-# ========================
 @app.route('/login', methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -108,9 +96,6 @@ def conversar_com_clara():
     resposta = gerar_resposta_clara(mensagem)
     return jsonify({'resposta': resposta})
 
-# ========================
-# PAINEL DE CONTROLE
-# ========================
 @app.route('/painel', methods=["GET", "POST"])
 def painel():
     conn = sqlite3.connect(DB_PATH)
@@ -130,6 +115,10 @@ def painel():
     c.execute("SELECT token, expira_em, descricao FROM tokens ORDER BY expira_em")
     tokens = c.fetchall()
     conn.close()
+
+    # ✅ LOG DE DEPURAÇÃO
+    print("📋 Tokens no painel:", tokens)
+
     return render_template("painel.html", tokens=tokens, now=date.today())
 
 @app.route('/atualizar_token', methods=["POST"])
@@ -153,9 +142,6 @@ def excluir_token():
     conn.close()
     return redirect("/painel")
 
-# ========================
-# API EXTERNA PARA CRIAÇÃO DE TOKENS
-# ========================
 @app.route("/api/registrar_token", methods=["POST"])
 def registrar_token():
     data = request.get_json()
@@ -179,13 +165,15 @@ def registrar_token():
         """, (token, expira_em, descricao))
         conn.commit()
         conn.close()
+
+        # ✅ LOG DE DEPURAÇÃO
+        print("✅ Token salvo via API:", token, expira_em, descricao)
+
         return jsonify({"status": "salvo com sucesso"})
     except Exception as e:
+        print("❌ Erro ao salvar token:", e)
         return jsonify({"erro": f"Erro ao salvar token: {str(e)}"}), 500
 
-# ========================
-# EXECUTAR LOCALMENTE
-# ========================
 if __name__ == '__main__':
     app.run(debug=True)
 
