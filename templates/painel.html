@@ -7,8 +7,7 @@
   <style>
     body { padding: 30px; background-color: #f8f9fa; }
     h2 { margin-bottom: 20px; }
-    .form-inline .form-control { margin-right: 10px; }
-    code { word-break: break-all; }
+    code { word-break: break-word; }
   </style>
 </head>
 <body>
@@ -16,15 +15,14 @@
     <h2>Painel de Controle - Tokens</h2>
 
     <!-- FORMULÁRIO DE CRIAÇÃO -->
-    <form id="form-criar-token" class="form-inline d-flex mb-4">
-      <input type="text" id="descricao" class="form-control me-2" placeholder="Descrição (ex: João, API)" required>
-      <input type="date" id="expira_em" class="form-control me-2" required>
+    <form id="form-criar-token" class="d-flex flex-wrap gap-2 mb-4">
+      <input type="text" id="descricao" class="form-control" placeholder="Descrição (ex: João, API)" required>
+      <input type="date" id="expira_em" class="form-control" required>
       <button type="submit" class="btn btn-success">Criar Token</button>
     </form>
 
-    <div id="mensagem" class="mb-4 text-success"></div>
+    <div id="mensagem" class="mb-4 text-success fw-bold"></div>
 
-    <!-- OPÇÕES -->
     <p class="text-muted">Os tokens criados são enviados diretamente para o servidor da Clara.</p>
   </div>
 
@@ -33,7 +31,9 @@
       const array = new Uint8Array(32);
       crypto.getRandomValues(array);
       return btoa(String.fromCharCode(...array))
-        .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "");
     }
 
     document.getElementById("form-criar-token").addEventListener("submit", async (e) => {
@@ -44,6 +44,8 @@
       const msgDiv = document.getElementById("mensagem");
 
       msgDiv.textContent = "";
+      msgDiv.classList.remove("text-danger", "text-success");
+
       if (!descricao || !expira_em) {
         msgDiv.textContent = "❌ Preencha todos os campos.";
         msgDiv.classList.add("text-danger");
@@ -60,16 +62,18 @@
             token,
             descricao,
             expira_em,
-            api_key: "7641a7810352258950835554253caaf8"  // 🔐 Troque por seu valor real
+            api_key: "7641a7810352258950835554253caaf8"  // Substitua pela sua chave real
           })
         });
 
         const data = await resp.json();
 
         if (resp.ok) {
-          msgDiv.innerHTML = `✅ Token criado e enviado com sucesso:<br><code>${token}</code>`;
-          msgDiv.classList.remove("text-danger");
+          msgDiv.innerHTML = `✅ Token criado:<br><code>${token}</code>`;
           msgDiv.classList.add("text-success");
+
+          // 🔁 Atualiza a página após 1,5s
+          setTimeout(() => location.reload(), 1500);
         } else {
           msgDiv.textContent = `❌ Erro: ${data.erro || "Desconhecido"}`;
           msgDiv.classList.add("text-danger");
