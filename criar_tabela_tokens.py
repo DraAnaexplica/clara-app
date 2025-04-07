@@ -1,21 +1,20 @@
 import sqlite3
-from datetime import datetime
 
-# Conecta ao banco de dados que já existe
-conn = sqlite3.connect("chat_history.db")
+conn = sqlite3.connect("tokens.db")
 c = conn.cursor()
 
-# Cria a tabela de tokens se não existir
 c.execute("""
 CREATE TABLE IF NOT EXISTS tokens (
-    token TEXT PRIMARY KEY,
-    expira_em TEXT
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    token TEXT UNIQUE NOT NULL,
+    descricao TEXT,
+    criado_em TEXT DEFAULT CURRENT_TIMESTAMP,
+    expira_em TEXT NOT NULL,
+    ativo INTEGER DEFAULT 1
 )
 """)
 
-# Insere um token de teste (opcional)
-c.execute("INSERT OR IGNORE INTO tokens (token, expira_em) VALUES (?, ?)", ("teste123", "2025-04-30"))
-
 conn.commit()
 conn.close()
-print("✅ Tabela criada e token de exemplo adicionado.")
+print("✅ Tabela de tokens atualizada com nova estrutura.")
+
