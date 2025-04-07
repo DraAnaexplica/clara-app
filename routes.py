@@ -6,13 +6,18 @@ from dotenv import load_dotenv
 from datetime import date
 from openrouter_utils import gerar_resposta_clara
 
-load_dotenv()
+# Carrega .env apenas se não estiver no Render
+if not os.getenv("DATABASE_URL"):
+    load_dotenv()
+
 app = Flask(__name__)
 
+# URL de conexão com o PostgreSQL
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     print("❌ DATABASE_URL não definida!")
 
+# Função para obter conexão com o PostgreSQL
 def get_db_connection():
     try:
         return psycopg2.connect(DATABASE_URL)
@@ -20,6 +25,7 @@ def get_db_connection():
         print(f"❌ Erro ao conectar ao PostgreSQL: {e}")
         return None
 
+# Cria a tabela se não existir
 def criar_tabela_tokens_pg():
     conn = get_db_connection()
     if not conn:
@@ -46,6 +52,7 @@ def criar_tabela_tokens_pg():
 
 criar_tabela_tokens_pg()
 
+# Verifica se o token é válido
 def validar_token(token):
     conn = get_db_connection()
     if not conn:
@@ -190,5 +197,9 @@ def registrar_token():
         return jsonify({"erro": f"Erro inesperado: {str(e)}"}), 500
     finally:
         conn.close()
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
 
 
